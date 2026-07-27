@@ -21,33 +21,51 @@
     --cinza-400:#9A93AB;
     --linha:#E4DFEF;
     --verde:#1B9E77;
+    --sombra-sm:0 1px 2px rgba(36,16,70,.04),0 2px 6px rgba(36,16,70,.05);
+    --sombra-md:0 6px 20px rgba(36,16,70,.08),0 2px 6px rgba(36,16,70,.04);
+    --sombra-lg:0 16px 40px rgba(36,16,70,.14),0 4px 12px rgba(36,16,70,.06);
+    --grad-roxo:linear-gradient(135deg,#3B1E6E 0%,#241046 100%);
+    --grad-laranja:linear-gradient(135deg,#FF8A3D 0%,#E85D04 100%);
+    --grad-marca:linear-gradient(120deg,var(--roxo-700) 0%,var(--roxo-500) 45%,var(--laranja-500) 110%);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Inter',system-ui,sans-serif;background:var(--fundo);color:var(--cinza-700);padding:28px 20px 60px}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--cinza-700);padding:28px 20px 60px;
+    background:
+      radial-gradient(900px 500px at 12% -8%,rgba(91,52,166,.10),transparent 60%),
+      radial-gradient(760px 460px at 105% 4%,rgba(255,107,0,.09),transparent 55%),
+      linear-gradient(180deg,#F5F2FB 0%,var(--fundo) 42%);
+    background-attachment:fixed;min-height:100vh}
   .wrap{max-width:1240px;margin:0 auto}
 
-  header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px}
-  h1{font-family:'Sora',sans-serif;font-weight:800;font-size:clamp(22px,3vw,32px);color:var(--roxo-900);line-height:1.15}
-  h1 span{color:var(--laranja-500)}
+  header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px;
+    position:relative;padding-left:18px}
+  header::before{content:"";position:absolute;left:0;top:4px;bottom:6px;width:5px;border-radius:999px;background:var(--grad-marca)}
+  h1{font-family:'Sora',sans-serif;font-weight:800;font-size:clamp(22px,3vw,32px);line-height:1.15;
+    background:var(--grad-marca);-webkit-background-clip:text;background-clip:text;color:transparent}
+  h1 span{-webkit-text-fill-color:var(--laranja-500);color:var(--laranja-500)}
   .sub{font-size:13.5px;color:var(--cinza-400);margin-top:6px}
-  .hoje-pill{background:var(--roxo-900);color:#fff;font-size:13px;font-weight:600;padding:8px 16px;border-radius:999px;display:flex;align-items:center;gap:8px}
+  .hoje-pill{background:var(--grad-roxo);color:#fff;font-size:13px;font-weight:600;padding:9px 18px;border-radius:999px;display:flex;align-items:center;gap:8px;box-shadow:var(--sombra-md)}
   .hoje-pill::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--laranja-500);animation:pulse 2s infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
   .abas{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px}
-  .abas button{font-family:'Sora',sans-serif;font-weight:700;font-size:14px;padding:12px 26px;border-radius:14px;border:2px solid var(--linha);background:#fff;color:var(--roxo-700);cursor:pointer;transition:all .15s}
-  .abas button:hover{border-color:var(--roxo-500);transform:translateY(-1px)}
-  .abas button.on{background:var(--roxo-900);border-color:var(--roxo-900);color:#fff;box-shadow:0 6px 18px rgba(36,16,70,.25)}
+  .abas button{font-family:'Sora',sans-serif;font-weight:700;font-size:14px;padding:12px 26px;border-radius:14px;border:2px solid transparent;background:#fff;color:var(--roxo-700);cursor:pointer;transition:all .18s cubic-bezier(.4,0,.2,1);box-shadow:var(--sombra-sm)}
+  .abas button:hover{border-color:var(--roxo-500);transform:translateY(-2px);box-shadow:var(--sombra-md)}
+  .abas button.on{background:var(--grad-roxo);border-color:transparent;color:#fff;box-shadow:0 8px 22px rgba(36,16,70,.30)}
   .abas button.on::after{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--laranja-500);margin-left:9px;vertical-align:middle}
 
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:26px}
-  .card{background:var(--branco);border:1px solid var(--linha);border-radius:14px;padding:16px 18px}
-  .card .num{font-family:'Sora',sans-serif;font-weight:800;font-size:30px;color:var(--roxo-700)}
-  .card .lbl{font-size:12.5px;font-weight:600;color:var(--cinza-400);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
-  .card.destaque .num{color:var(--laranja-500)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:26px}
+  .card{position:relative;background:linear-gradient(180deg,#fff,#FDFCFF);border:1px solid var(--linha);border-radius:16px;padding:18px 20px;box-shadow:var(--sombra-sm);transition:transform .18s cubic-bezier(.4,0,.2,1),box-shadow .18s;overflow:hidden}
+  .card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--roxo-500);opacity:.85}
+  .card.destaque::before{background:var(--grad-laranja)}
+  .card:hover{transform:translateY(-3px);box-shadow:var(--sombra-md)}
+  .card .num{font-family:'Sora',sans-serif;font-weight:800;font-size:32px;color:var(--roxo-700);line-height:1.05}
+  .card .lbl{font-size:12.5px;font-weight:600;color:var(--cinza-400);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
+  .card.destaque .num{background:var(--grad-laranja);-webkit-background-clip:text;background-clip:text;color:transparent}
 
-  .painel{background:var(--branco);border:1px solid var(--linha);border-radius:16px;padding:22px;margin-bottom:28px;overflow-x:auto}
-  .painel h2{font-family:'Sora',sans-serif;font-size:17px;color:var(--roxo-900);margin-bottom:4px}
+  .painel{background:var(--branco);border:1px solid var(--linha);border-radius:18px;padding:24px;margin-bottom:26px;overflow-x:auto;box-shadow:var(--sombra-md)}
+  .painel h2{font-family:'Sora',sans-serif;font-size:17px;color:var(--roxo-900);margin-bottom:4px;display:flex;align-items:center;gap:10px}
+  .painel h2::before{content:"";width:4px;height:19px;border-radius:999px;background:var(--grad-marca);flex:none}
   .painel .dica{font-size:12.5px;color:var(--cinza-400);margin-bottom:16px}
 
   .legenda{display:flex;flex-wrap:wrap;gap:18px;font-size:12.5px;font-weight:600;margin-bottom:18px}
@@ -109,9 +127,9 @@
   .badge-turno.T{background:#FFE8D6;color:var(--laranja-600)}
   .badge-turno.N{background:var(--roxo-100);color:var(--roxo-700)}
   .filtros{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
-  .filtros button{font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;padding:7px 16px;border-radius:999px;border:1px solid var(--linha);background:#fff;color:var(--cinza-700);cursor:pointer;transition:all .12s}
-  .filtros button:hover{border-color:var(--roxo-500)}
-  .filtros button.on{background:var(--roxo-900);border-color:var(--roxo-900);color:#fff}
+  .filtros button{font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;padding:7px 16px;border-radius:999px;border:1px solid var(--linha);background:#fff;color:var(--cinza-700);cursor:pointer;transition:all .15s;box-shadow:var(--sombra-sm)}
+  .filtros button:hover{border-color:var(--roxo-500);color:var(--roxo-700);transform:translateY(-1px)}
+  .filtros button.on{background:var(--grad-roxo);border-color:transparent;color:#fff;box-shadow:0 5px 14px rgba(36,16,70,.24)}
   .nota{font-size:12px;color:var(--cinza-400);margin-top:12px;line-height:1.6}
 
   .gm-scroll{overflow-x:auto;padding-bottom:6px}
@@ -119,10 +137,11 @@
   .gm-col{flex:1;display:flex;flex-direction:column;align-items:center;min-width:28px}
   .gm-val{font-size:10.5px;font-weight:800;color:var(--roxo-900);margin-bottom:3px;font-family:'Sora',sans-serif}
   .gm-col.pico .gm-val{color:var(--laranja-600)}
-  .gm-bar{width:100%;max-width:34px;height:170px;display:flex;flex-direction:column;justify-content:flex-end;border-radius:7px 7px 0 0;overflow:hidden;cursor:pointer}
-  .gm-seg-e2{background:linear-gradient(180deg,#6A42BC,var(--roxo-700))}
-  .gm-seg-e1{background:linear-gradient(180deg,#FF7A1A,var(--laranja-600))}
-  .gm-col.pico .gm-bar{box-shadow:0 0 0 2px var(--laranja-500)}
+  .gm-bar{width:100%;max-width:34px;height:170px;display:flex;flex-direction:column;justify-content:flex-end;border-radius:9px 9px 3px 3px;overflow:hidden;cursor:pointer;background:rgba(91,52,166,.05);transition:transform .15s,filter .15s}
+  .gm-bar:hover{transform:translateY(-2px);filter:brightness(1.06) saturate(1.05)}
+  .gm-seg-e2{background:linear-gradient(180deg,#7A50CC,var(--roxo-700))}
+  .gm-seg-e1{background:linear-gradient(180deg,#FF8A3D,var(--laranja-600))}
+  .gm-col.pico .gm-bar{box-shadow:0 0 0 2px var(--laranja-500),0 8px 18px rgba(255,107,0,.25)}
   .gm-mes{height:40px;margin-top:8px;width:100%;display:flex;justify-content:center}
   .gm-mes span{font-size:9.5px;font-weight:700;color:var(--cinza-400);transform:rotate(-55deg);white-space:nowrap;transform-origin:center}
   .gm-mes.ano span{color:var(--roxo-700)}
@@ -280,6 +299,8 @@
 
   <div id="vistaGeral" style="display:none">
     <div id="avisoVazio"></div>
+    <div class="filtros" id="filtroUnidade" style="margin-top:4px"></div>
+    <div class="filtros" id="filtroTurno" style="margin-top:-6px"></div>
     <div class="cards" id="cardsGeral"></div>
 
     <section class="painel">
@@ -368,8 +389,8 @@
       <thead>
         <tr>
           <th>Turma</th><th>Turno</th><th>Alunos</th><th>Situação hoje</th><th>Data de término</th><th>Final do CMM</th>
-          <th class="grp-e1">Início Estágio I</th><th class="grp-e1">Final Estágio I</th>
-          <th class="grp-e2">Início Estágio II</th><th class="grp-e2">Final Estágio II</th>
+          <th class="grp-e1">Início Projeto Estagiar I</th><th class="grp-e1">Início Estágio I</th><th class="grp-e1">Final Estágio I</th>
+          <th class="grp-e2">Início Projeto Estagiar II</th><th class="grp-e2">Início Estágio II</th><th class="grp-e2">Final Estágio II</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -390,8 +411,10 @@
         <label>Turma<input type="text" id="ntId" placeholder="Ex.: 263 / SAB1" maxlength="20"></label>
         <label>Tipo<select id="ntTipo"><option value="regular">Regular</option><option value="especial">Especial</option><option value="sabado">Sábado</option></select></label>
         <label>Unidade<select id="ntUni"><option value="todas">Todas</option><option value="itaquera">Itaquera</option><option value="guaianases">Guaianases</option><option value="guarulhos">Guarulhos</option><option value="saomiguel">São Miguel</option><option value="carapicuiba">Carapicuíba</option><option value="jabaquara">Jabaquara</option><option value="santoamaro">Santo Amaro</option><option value="grajau">Grajaú</option><option value="maua">Mauá</option><option value="diadema">Diadema</option></select></label>
+        <label>Início Proj. Estagiar I<input type="date" id="ntPe1i"></label>
         <label>Início Est. I<input type="date" id="ntE1i"></label>
         <label>Final Est. I<input type="date" id="ntE1f"></label>
+        <label>Início Proj. Estagiar II<input type="date" id="ntPe2i"></label>
         <label>Início Est. II<input type="date" id="ntE2i"></label>
         <label>Final Est. II<input type="date" id="ntE2f"></label>
         <label>Final CMM<input type="date" id="ntCmm"></label>
@@ -531,8 +554,7 @@ function status(t){
 let unidadeAtual=0;
 const abas=document.getElementById("abas");
 abas.innerHTML=`<button data-i="geral" class="on">Visão Geral</button>`+
-  UNIDADES.map((u,i)=>`<button data-i="${i}">${u.nome}</button>`).join("")+
-  `<button data-i="campos">Campos de Estágio</button>`;
+  UNIDADES.map((u,i)=>`<button data-i="${i}">${u.nome}</button>`).join("");
 function mostrarVista(qual){
   document.getElementById("vistaGeral").style.display=qual==="geral"?"":"none";
   document.getElementById("vistaCampos").style.display=qual==="campos"?"":"none";
@@ -606,8 +628,8 @@ function render(){
       <td><input type="number" class="inp-alunos" min="0" max="999" value="${getAlunos(u.chave,t.id,sig)||""}" placeholder="0" data-turma="${t.id}" data-tur="${sig}" aria-label="Alunos ${t.id} ${nome}"></td>
       <td><span class="g-status ${s.cls}">${s.txt}</span></td>
       <td>${fmt(D(t.termino))}</td><td>${fmt(D(t.cmm))}</td>
-      <td class="e1">${fmt(D(t.e1i))}</td><td class="e1">${fmt(D(t.e1f))}</td>
-      <td class="e2">${fmt(D(t.e2i))}</td><td class="e2">${fmt(D(t.e2f))}</td>
+      <td class="e1">${t.pe1i?fmt(D(t.pe1i)):"—"}</td><td class="e1">${fmt(D(t.e1i))}</td><td class="e1">${fmt(D(t.e1f))}</td>
+      <td class="e2">${t.pe2i?fmt(D(t.pe2i)):"—"}</td><td class="e2">${fmt(D(t.e2i))}</td><td class="e2">${fmt(D(t.e2f))}</td>
     </tr>`).join("")}).join("");
   document.querySelectorAll(".inp-alunos").forEach(inp=>{
     inp.addEventListener("change",()=>{
@@ -635,10 +657,16 @@ function atualizarResumos(){
 }
 
 // ---- Visão Geral: vagas necessárias por mês ----
+// filtro de turno na Visão Geral ("todos" = M+T+N)
+let filtroTurnoGeral="todos";
+// alunos de uma turma respeitando o filtro de turno
+function alunosFiltrados(uni,turma){
+  return filtroTurnoGeral==="todos"?totalTurma(uni,turma):getAlunos(uni,turma,filtroTurnoGeral);
+}
 function vagasNoMes(u,mIni,mFim){
   let e1=0,e2=0;
   u.turmas.forEach(t=>{
-    const n=totalTurma(u.chave,t.id);
+    const n=alunosFiltrados(u.chave,t.id);
     if(D(t.e1i)<=mFim&&D(t.e1f)>=mIni)e1+=n;
     if(D(t.e2i)<=mFim&&D(t.e2f)>=mIni)e2+=n;
   });
@@ -646,7 +674,8 @@ function vagasNoMes(u,mIni,mFim){
 }
 const mesesAbertos=new Set();
 // turmas ativas (E1/E2) num mês, com datas do estágio e alunos por unidade
-function detalheTurmasMes(mIni,mFim){
+function detalheTurmasMes(mIni,mFim,unis){
+  const lista=unis||UNIDADES;
   const linhas=[];
   turmaLista.forEach(t=>{
     const units=(t.unidades||TODAS_UNIS).split(",").map(s=>s.trim());
@@ -654,8 +683,8 @@ function detalheTurmasMes(mIni,mFim){
       if(!ini||!fim)return;
       if(D(ini)<=mFim&&D(fim)>=mIni){
         const perUni={};let total=0;
-        UNIDADES.forEach(u=>{const n=units.includes(u.chave)?totalTurma(u.chave,t.id):0;perUni[u.chave]=n;total+=n;});
-        linhas.push({id:t.id,est,ini,fim,perUni,total});
+        lista.forEach(u=>{const n=units.includes(u.chave)?alunosFiltrados(u.chave,t.id):0;perUni[u.chave]=n;total+=n;});
+        if(total>0||!unis)linhas.push({id:t.id,est,ini,fim,perUni,total});
       }
     });
   });
@@ -663,15 +692,44 @@ function detalheTurmasMes(mIni,mFim){
   return linhas;
 }
 
+// filtro de unidade na Visão Geral ("todas" = consolidado)
+let filtroUniGeral="todas";
+(function montarFiltroUnidade(){
+  const box=document.getElementById("filtroUnidade");
+  box.innerHTML=`<button class="on" data-u="todas">Todas as unidades</button>`+
+    UNIDADES.map(u=>`<button data-u="${u.chave}">${u.nome}</button>`).join("");
+  box.addEventListener("click",e=>{
+    const b=e.target.closest("button");if(!b)return;
+    filtroUniGeral=b.dataset.u;
+    box.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
+    renderGeral();
+  });
+  const boxT=document.getElementById("filtroTurno");
+  boxT.innerHTML=`<button class="on" data-t="todos">Todos os turnos</button>`+
+    TURNOS.map(([sig,nome])=>`<button data-t="${sig}">${nome}</button>`).join("");
+  boxT.addEventListener("click",e=>{
+    const b=e.target.closest("button");if(!b)return;
+    filtroTurnoGeral=b.dataset.t;
+    boxT.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
+    renderGeral();
+  });
+})();
+
 function renderGeral(){
-  document.getElementById("subTitulo").textContent=
-    `Visão consolidada das 10 unidades · Vagas de campo necessárias por mês, calculadas a partir dos alunos preenchidos em cada unidade`;
+  // unidades ativas conforme o filtro
+  const unisAtivas=filtroUniGeral==="todas"?UNIDADES:UNIDADES.filter(u=>u.chave===filtroUniGeral);
+  const uniSel=filtroUniGeral==="todas"?null:unisAtivas[0];
+  const turnoNome=(TURNOS.find(([s])=>s===filtroTurnoGeral)||[])[1];
+  const sufTurno=turnoNome?` · Turno da ${turnoNome.toLowerCase()}`:"";
+  document.getElementById("subTitulo").textContent=(uniSel
+    ?`Unidade ${uniSel.nome} · Vagas de campo necessárias por mês, calculadas a partir dos alunos preenchidos nesta unidade`
+    :`Visão consolidada das 10 unidades · Vagas de campo necessárias por mês, calculadas a partir dos alunos preenchidos em cada unidade`)+sufTurno;
 
   // série mensal
   const serie=meses.map(m=>{
     const mIni=new Date(m.d.getFullYear(),m.d.getMonth(),1);
     const mFim=new Date(m.d.getFullYear(),m.d.getMonth()+1,0);
-    const porUni=UNIDADES.map(u=>vagasNoMes(u,mIni,mFim));
+    const porUni=unisAtivas.map(u=>vagasNoMes(u,mIni,mFim));
     const e1=porUni.reduce((s,x)=>s+x.e1,0), e2=porUni.reduce((s,x)=>s+x.e2,0);
     return{d:m.d,porUni,e1,e2,total:e1+e2};
   });
@@ -681,9 +739,9 @@ function renderGeral(){
   const mesLongo=d=>d.toLocaleDateString("pt-BR",{month:"long",year:"numeric"});
 
   // aviso se nenhum aluno foi preenchido
-  const totalGeralAlunos=UNIDADES.reduce((s,u)=>s+u.turmas.reduce((a,t)=>a+totalTurma(u.chave,t.id),0),0);
+  const totalGeralAlunos=unisAtivas.reduce((s,u)=>s+u.turmas.reduce((a,t)=>a+totalTurma(u.chave,t.id),0),0);
   document.getElementById("avisoVazio").innerHTML=totalGeralAlunos===0
-    ?`<div class="aviso-vazio"><b>Nenhum aluno cadastrado ainda.</b> Entre nas abas de cada unidade e preencha o número de alunos por turma e turno — este painel calcula as vagas automaticamente a partir desses valores.</div>`:"";
+    ?`<div class="aviso-vazio"><b>Nenhum aluno cadastrado ${uniSel?"nesta unidade":"ainda"}.</b> Entre nas abas de cada unidade e preencha o número de alunos por turma e turno — este painel calcula as vagas automaticamente a partir desses valores.</div>`:"";
 
   // cards
   const agora=new Date(hoje.getFullYear(),hoje.getMonth(),1);
@@ -693,12 +751,12 @@ function renderGeral(){
     <div class="card destaque"><div class="num">${mesAtual?mesAtual.total:0}</div><div class="lbl">vagas neste mês (${mesNome(hoje)})</div></div>
     <div class="card destaque"><div class="num">${pico.total}</div><div class="lbl">pico de demanda · ${mesLongo(pico.d)}</div></div>
     <div class="card"><div class="num">${proxSerie?proxSerie.total:"—"}</div><div class="lbl">${proxSerie?"vagas em "+mesNome(proxSerie.d):"sem demanda futura"}</div></div>
-    <div class="card"><div class="num">${totalGeralAlunos}</div><div class="lbl">alunos cadastrados · 10 unidades</div></div>`;
+    <div class="card"><div class="num">${totalGeralAlunos}</div><div class="lbl">alunos cadastrados · ${uniSel?uniSel.nome:"10 unidades"}</div></div>`;
 
   // gráfico de barras empilhadas
   document.getElementById("graficoMeses").innerHTML=serie.map(s=>{
     const h1=s.e1/max*170, h2=s.e2/max*170;
-    const detalhe=UNIDADES.map((u,i)=>`${u.nome}: ${s.porUni[i].e1+s.porUni[i].e2}`).join("<br>");
+    const detalhe=unisAtivas.map((u,i)=>`${u.nome}: ${s.porUni[i].e1+s.porUni[i].e2}`).join("<br>");
     return`<div class="gm-col ${s===pico&&s.total>0?"pico":""}">
       <div class="gm-val">${s.total||""}</div>
       <div class="gm-bar" data-tip="<b>${mesLongo(s.d)}</b><br>Estágio I: ${s.e1} · Estágio II: ${s.e2}<br>${detalhe}">
@@ -709,9 +767,9 @@ function renderGeral(){
     </div>`}).join("");
 
   // tabela mensal (clique no mês expande as turmas daquele mês)
-  const nCols=1+UNIDADES.length+3; // Mês + unidades + Estágio I + Estágio II + Total
+  const nCols=1+unisAtivas.length+3; // Mês + unidades + Estágio I + Estágio II + Total
   document.getElementById("theadMeses").innerHTML=
-    `<tr><th>Mês</th>${UNIDADES.map(u=>`<th>${u.nome}</th>`).join("")}<th>Estágio I</th><th>Estágio II</th><th>Total de vagas</th></tr>`;
+    `<tr><th>Mês</th>${unisAtivas.map(u=>`<th>${u.nome}</th>`).join("")}<th>Estágio I</th><th>Estágio II</th><th>Total de vagas</th></tr>`;
   document.getElementById("tabelaMeses").innerHTML=serie.filter(s=>s.total>0).map(s=>{
     const tots=s.porUni.map(x=>x.e1+x.e2);
     const ym=s.d.getFullYear()+"-"+s.d.getMonth();
@@ -725,18 +783,18 @@ function renderGeral(){
     if(aberto){
       const mIni=new Date(s.d.getFullYear(),s.d.getMonth(),1);
       const mFim=new Date(s.d.getFullYear(),s.d.getMonth()+1,0);
-      const det=detalheTurmasMes(mIni,mFim);
-      const nDet=4+UNIDADES.length+1;
+      const det=detalheTurmasMes(mIni,mFim,unisAtivas);
+      const nDet=4+unisAtivas.length+1;
       const rows=det.map(d=>`<tr>
         <td class="turma">${d.id}</td>
         <td><span class="g-status ${d.est==="I"?"st-e1":"st-e2"}">Estágio ${d.est}</span></td>
         <td>${fmt(D(d.ini))}</td><td>${fmt(D(d.fim))}</td>
-        ${UNIDADES.map(u=>`<td>${d.perUni[u.chave]||0}</td>`).join("")}
+        ${unisAtivas.map(u=>`<td>${d.perUni[u.chave]||0}</td>`).join("")}
         <td><b>${d.total}</b></td>
       </tr>`).join("")||`<tr><td colspan="${nDet}" style="color:var(--cinza-400)">Nenhuma turma ativa neste mês.</td></tr>`;
       html+=`<tr class="mes-det"><td colspan="${nCols}">
         <table class="tab-detmes">
-          <thead><tr><th>Turma</th><th>Estágio</th><th>Início</th><th>Término</th>${UNIDADES.map(u=>`<th>${u.nome}</th>`).join("")}<th>Total</th></tr></thead>
+          <thead><tr><th>Turma</th><th>Estágio</th><th>Início</th><th>Término</th>${unisAtivas.map(u=>`<th>${u.nome}</th>`).join("")}<th>Total</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </td></tr>`;
@@ -1073,15 +1131,27 @@ function aplicarFiltroTurno(){
 
 // ---- editor de datas das turmas (rodapé da unidade; vale p/ as 10 unidades) ----
 const CAMPOS_DATA=[
-  ["e1i","Início Est. I"],["e1f","Final Est. I"],
-  ["e2i","Início Est. II"],["e2f","Final Est. II"],
+  ["pe1i","Início Proj. Estagiar I"],["e1i","Início Est. I"],["e1f","Final Est. I"],
+  ["pe2i","Início Proj. Estagiar II"],["e2i","Início Est. II"],["e2f","Final Est. II"],
   ["cmm","Final do CMM"],["termino","Data de término"]
 ];
+// datas do Projeto Estagiar — colunas novas que podem ainda não existir na tabela do banco
+const CAMPOS_EXTRA=["pe1i","pe2i"];
+// upsert tolerante: se a tabela ainda não tiver as colunas novas, refaz sem elas (o resto continua salvando)
+async function upsertTurmas(rows){
+  let r=await supabaseClient.from("turmas_sp").upsert(rows,{onConflict:"id"});
+  if(r.error&&CAMPOS_EXTRA.some(k=>rows.some(row=>k in row))){
+    const limpas=rows.map(row=>{const c={...row};CAMPOS_EXTRA.forEach(k=>delete c[k]);return c;});
+    r=await supabaseClient.from("turmas_sp").upsert(limpas,{onConflict:"id"});
+    if(!r.error)console.warn("Datas do Projeto Estagiar não persistidas: adicione as colunas pe1i/pe2i na tabela turmas_sp (veja o SQL).");
+  }
+  return r;
+}
 async function salvarTurma(t){
-  return await supabaseClient.from("turmas_sp").upsert({
+  return await upsertTurmas([{
     id:t.id,tipo:t.tipo||"regular",ordem:t.ordem||0,unidades:t.unidades||TODAS_UNIS,
-    e1i:t.e1i,e1f:t.e1f,e2i:t.e2i,e2f:t.e2f,cmm:t.cmm,termino:t.termino
-  },{onConflict:"id"});
+    pe1i:t.pe1i||null,e1i:t.e1i,e1f:t.e1f,pe2i:t.pe2i||null,e2i:t.e2i,e2f:t.e2f,cmm:t.cmm,termino:t.termino
+  }]);
 }
 function renderDatasEditor(){
   const lista=turmaLista.slice().sort((a,b)=>((a.ordem||0)-(b.ordem||0))||(a.id<b.id?-1:1));
@@ -1127,14 +1197,15 @@ document.getElementById("btnAddTurma").addEventListener("click",async()=>{
   const nova={
     id, tipo:g("ntTipo"), unidades:uni==="todas"?TODAS_UNIS:uni,
     ordem:Math.max(0,...turmaLista.map(t=>t.ordem||0))+1,
-    e1i:g("ntE1i"),e1f:g("ntE1f"),e2i:g("ntE2i"),e2f:g("ntE2f"),cmm:g("ntCmm"),termino:g("ntTermino")
+    pe1i:g("ntPe1i"),e1i:g("ntE1i"),e1f:g("ntE1f"),pe2i:g("ntPe2i"),e2i:g("ntE2i"),e2f:g("ntE2f"),cmm:g("ntCmm"),termino:g("ntTermino")
   };
-  for(const[k,l] of CAMPOS_DATA){if(!nova[k]){alert("Preencha todas as datas da turma ("+l+").");return;}}
+  // as datas do Projeto Estagiar são opcionais; as demais são obrigatórias
+  for(const[k,l] of CAMPOS_DATA){if(!CAMPOS_EXTRA.includes(k)&&!nova[k]){alert("Preencha todas as datas da turma ("+l+").");return;}}
   const{error}=await salvarTurma(nova);
   if(error)console.error("Turma não persistida (rode o SQL da tabela 'turmas'):",error);
   turmaLista.push(nova);
   montarUnidades();recalcularPeriodo();
-  ["ntId","ntE1i","ntE1f","ntE2i","ntE2f","ntCmm","ntTermino"].forEach(x=>document.getElementById(x).value="");
+  ["ntId","ntPe1i","ntE1i","ntE1f","ntPe2i","ntE2i","ntE2f","ntCmm","ntTermino"].forEach(x=>document.getElementById(x).value="");
   render();renderDatasEditor();
 });
 document.getElementById("btnDatasSalvar").addEventListener("click",async()=>{
@@ -1149,7 +1220,7 @@ document.getElementById("btnDatasSalvar").addEventListener("click",async()=>{
     t.unidades=row.unidades;
     return row;
   });
-  const{error}=await supabaseClient.from("turmas_sp").upsert(rows,{onConflict:"id"});
+  const{error}=await upsertTurmas(rows);
   if(error)console.error("Datas não persistidas (rode o SQL da tabela 'turmas'):",error);
   montarUnidades();recalcularPeriodo();
   const av=document.getElementById("avisoDatas");
@@ -1190,14 +1261,13 @@ async function iniciar(){
     if(turmasRows&&turmasRows.length){
       turmaLista=turmasRows.map(r=>({
         id:r.id,tipo:r.tipo||"regular",ordem:r.ordem||0,unidades:r.unidades||TODAS_UNIS,
-        e1i:r.e1i,e1f:r.e1f,e2i:r.e2i,e2f:r.e2f,cmm:r.cmm,termino:r.termino
+        pe1i:r.pe1i||"",e1i:r.e1i,e1f:r.e1f,pe2i:r.pe2i||"",e2i:r.e2i,e2f:r.e2f,cmm:r.cmm,termino:r.termino
       }));
     }else{
       // primeira vez: grava as turmas base no banco
-      await supabaseClient.from("turmas_sp").upsert(
+      await upsertTurmas(
         turmaLista.map(t=>({id:t.id,tipo:t.tipo,ordem:t.ordem,unidades:t.unidades,
-          e1i:t.e1i,e1f:t.e1f,e2i:t.e2i,e2f:t.e2f,cmm:t.cmm,termino:t.termino})),
-        {onConflict:"id"}
+          pe1i:t.pe1i||null,e1i:t.e1i,e1f:t.e1f,pe2i:t.pe2i||null,e2i:t.e2i,e2f:t.e2f,cmm:t.cmm,termino:t.termino}))
       );
     }
   }
@@ -1217,6 +1287,7 @@ async function iniciar(){
   render();            // prepara a vista de unidade em segundo plano
   renderDatasEditor(); // preenche o editor de datas/turmas
   renderGeral();       // painel inicial
+  mostrarVista("geral"); // abre de fato na Visão Geral
 }
 iniciar();
 </script>
