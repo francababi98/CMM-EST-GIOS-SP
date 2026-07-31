@@ -260,6 +260,10 @@
   .add-turma input:focus,.add-turma select:focus{outline:none;border-color:var(--laranja-500);background:#fff}
   .add-turma .btn-add{align-self:end}
   .tab-datas td .btn-remover{padding:4px 9px;font-size:11px}
+  .cel-ordem{white-space:nowrap;text-align:center}
+  .btn-mover{font-size:11px;line-height:1;padding:4px 7px;margin:0 1px;border:1px solid var(--linha);border-radius:7px;background:var(--roxo-100);color:var(--roxo-700);cursor:pointer;transition:all .12s}
+  .btn-mover:hover:not(:disabled){background:var(--roxo-900);color:#fff;border-color:var(--roxo-900)}
+  .btn-mover:disabled{opacity:.3;cursor:default}
   .tab-datas .tuni{font-size:10px;font-weight:700;color:var(--roxo-700);background:var(--roxo-100);padding:2px 7px;border-radius:999px;white-space:nowrap}
   .tab-datas .ttipo-especial{color:var(--laranja-600)}
   .tab-datas .ttipo-sabado{color:var(--verde)}
@@ -1165,13 +1169,14 @@ async function salvarTurma(t){
 }
 function renderDatasEditor(){
   const lista=turmaLista.slice().sort((a,b)=>((a.ordem||0)-(b.ordem||0))||(a.id<b.id?-1:1));
-  const head=`<tr><th>Turma</th><th>Tipo</th><th>Unidades</th>${CAMPOS_DATA.map(([,l])=>`<th>${l}</th>`).join("")}<th></th></tr>`;
+  const head=`<tr><th>Ordem</th><th>Turma</th><th>Tipo</th><th>Unidades</th>${CAMPOS_DATA.map(([,l])=>`<th>${l}</th>`).join("")}<th></th></tr>`;
   const UNIS=UNIDADES.map(u=>[u.chave,u.nome]);
-  const body=lista.map(t=>{
+  const body=lista.map((t,k)=>{
     const setU=new Set((t.unidades||TODAS_UNIS).split(",").map(s=>s.trim()));
     const tcls=t.tipo==="especial"?"ttipo-especial":t.tipo==="sabado"?"ttipo-sabado":"";
     const chks=UNIS.map(([k,l])=>`<label class="uni-chk"><input type="checkbox" class="inp-uni" data-turma="${t.id}" data-uni="${k}"${setU.has(k)?" checked":""}> ${l}</label>`).join("");
     return `<tr>
+      <td class="cel-ordem"><button class="btn-mover" data-mv="up" data-turma="${t.id}"${k===0?" disabled":""} title="Mover para cima">▲</button><button class="btn-mover" data-mv="down" data-turma="${t.id}"${k===lista.length-1?" disabled":""} title="Mover para baixo">▼</button></td>
       <td class="turma">${t.id}</td>
       <td class="${tcls}" style="font-weight:700;font-size:11.5px;text-transform:capitalize">${t.tipo||"regular"}</td>
       <td>${chks}</td>
@@ -1190,6 +1195,20 @@ function renderDatasEditor(){
       montarUnidades();recalcularPeriodo();render();renderDatasEditor();
     });
   });
+  document.querySelectorAll(".btn-mover").forEach(btn=>{
+    btn.addEventListener("click",()=>moverTurma(btn.dataset.turma,btn.dataset.mv==="up"?-1:1));
+  });
+}
+// move uma turma para cima (-1) ou para baixo (+1) na ordem e salva a nova ordem no banco
+async function moverTurma(id,dir){
+  const lista=turmaLista.slice().sort((a,b)=>((a.ordem||0)-(b.ordem||0))||(a.id<b.id?-1:1));
+  const i=lista.findIndex(t=>t.id===id), j=i+dir;
+  if(i<0||j<0||j>=lista.length)return;
+  [lista[i],lista[j]]=[lista[j],lista[i]];
+  lista.forEach((t,k)=>t.ordem=k); // renumera 0,1,2,... (atualiza os objetos reais de turmaLista)
+  montarUnidades();recalcularPeriodo();render();renderDatasEditor();
+  const{error}=await upsertTurmas(lista.map(t=>({id:t.id,ordem:t.ordem})));
+  if(error)console.error("Nova ordem não persistida:",error);
 }
 document.getElementById("btnDatasToggle").addEventListener("click",()=>{
   const ed=document.getElementById("datasEditor"),btn=document.getElementById("btnDatasToggle");
