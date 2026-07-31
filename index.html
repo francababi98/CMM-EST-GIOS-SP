@@ -78,6 +78,13 @@
   .marc-fim{width:12px;height:12px;border-radius:50%;border:3px solid var(--laranja-600);background:#fff}
   .linha-hoje-leg{width:3px;height:16px;background:var(--laranja-600);border-radius:2px}
 
+  .periodo-gantt{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px;font-size:12.5px}
+  .periodo-gantt .pg-titulo{font-family:'Sora',sans-serif;font-weight:700;color:var(--roxo-900)}
+  .periodo-gantt label{display:flex;align-items:center;gap:6px;font-weight:600;color:var(--cinza-700)}
+  .periodo-gantt input{font-family:'Inter',sans-serif;font-size:12.5px;color:var(--roxo-900);padding:6px 9px;border:1.5px solid var(--linha);border-radius:8px;background:#FDFCFF}
+  .periodo-gantt input:focus{outline:none;border-color:var(--laranja-500);background:#fff}
+  .periodo-gantt button{font-family:'Inter',sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px;border:1px solid var(--linha);background:#fff;color:var(--roxo-700);cursor:pointer;transition:all .12s}
+  .periodo-gantt button:hover{background:var(--roxo-900);color:#fff;border-color:var(--roxo-900)}
   .gantt{min-width:900px;position:relative}
   .g-meses{display:flex;margin-left:210px;border-bottom:2px solid var(--roxo-100)}
   .g-mes{font-size:10.5px;font-weight:700;color:var(--cinza-400);text-align:center;padding:6px 0;border-left:1px solid var(--linha);text-transform:uppercase;letter-spacing:.03em}
@@ -377,6 +384,12 @@
       <span><i class="chip recesso"></i> Recesso (22/12–05/01)</span>
       <span><i class="linha-hoje-leg"></i> Hoje</span>
     </div>
+    <div class="periodo-gantt">
+      <span class="pg-titulo">Ver período:</span>
+      <label>De <input type="date" id="ganttDe"></label>
+      <label>Até <input type="date" id="ganttAte"></label>
+      <button type="button" id="ganttLimpar">Mostrar tudo</button>
+    </div>
     <div class="gantt" id="gantt"></div>
   </section>
 
@@ -568,6 +581,8 @@ function status(t){
 
 // ---- abas: Visão Geral + unidades + campos ----
 let unidadeAtual=0;
+// filtro "Ver período" da linha do tempo (null = período completo)
+let ganttDe=null,ganttAte=null;
 const abas=document.getElementById("abas");
 abas.innerHTML=`<button data-i="geral" class="on">Visão Geral</button>`+
   UNIDADES.map((u,i)=>`<button data-i="${i}">${u.nome}</button>`).join("");
@@ -582,6 +597,15 @@ abas.addEventListener("click",e=>{
   if(b.dataset.i==="geral"){mostrarVista("geral");renderGeral();}
   else if(b.dataset.i==="campos"){mostrarVista("campos");renderCampos();}
   else{unidadeAtual=+b.dataset.i;mostrarVista("unidade");render();}
+});
+
+// ---- filtro "Ver período" da linha do tempo ----
+document.getElementById("ganttDe").addEventListener("change",e=>{ganttDe=e.target.value?D(e.target.value):null;render();});
+document.getElementById("ganttAte").addEventListener("change",e=>{ganttAte=e.target.value?D(e.target.value):null;render();});
+document.getElementById("ganttLimpar").addEventListener("click",()=>{
+  ganttDe=ganttAte=null;
+  document.getElementById("ganttDe").value="";document.getElementById("ganttAte").value="";
+  render();
 });
 
 // ---- render principal ----
@@ -611,8 +635,18 @@ function render(){
     <div class="card"><div class="num">${prox?prox.id:"—"}</div><div class="lbl">próximo início${prox?" · "+fmt(prox.d):""}</div></div>
     <div class="card"><div class="num">${concl}/${turmas.length}</div><div class="lbl">ciclos concluídos</div></div>`;
 
-  // gantt
-  let html=`<div class="g-meses">${meses.map(m=>{
+  // gantt — janela de datas do filtro "Ver período" (sem filtro = período completo)
+  let gIni=ini,gFim=fim;
+  if(ganttDe)gIni=new Date(ganttDe.getFullYear(),ganttDe.getMonth(),1);
+  if(ganttAte)gFim=new Date(ganttAte.getFullYear(),ganttAte.getMonth()+1,1);
+  if(!(gFim>gIni)){gIni=ini;gFim=fim;} // janela inválida -> volta ao período completo
+  const gTotal=gFim-gIni;
+  const gpos=d=>(d-gIni)/gTotal*100;
+  const gmeses=[];{let c=new Date(gIni);while(c<gFim&&gmeses.length<600){const p=new Date(c.getFullYear(),c.getMonth()+1,1);gmeses.push({d:new Date(c),w:(Math.min(p,gFim)-c)/gTotal*100});c=p;}}
+  // barra recortada à janela; "" se estiver totalmente fora
+  const gBarra=(cls,di,df,tip)=>{const a=D(di),b=D(df);if(b<gIni||a>gFim)return"";const l=Math.max(0,gpos(a)),r=Math.min(100,gpos(b));return r>l?`<div class="barra ${cls}" style="left:${l}%;width:${r-l}%" data-tip="${tip}"></div>`:"";};
+  const gMarc=(cls,dd,tip)=>{const x=gpos(D(dd));return(x<0||x>100)?"":`<div class="marc ${cls}" style="left:${x}%" data-tip="${tip}"></div>`;};
+  let html=`<div class="g-meses">${gmeses.map(m=>{
     const label=m.d.getMonth()===0?`<span class="ano">${m.d.getFullYear()}</span>`:nomes[m.d.getMonth()];
     return`<div class="g-mes ${m.d.getMonth()===0?"ano":""}" style="width:${m.w}%">${label}</div>`}).join("")}</div>
   <div class="g-body">`;
@@ -621,18 +655,17 @@ function render(){
     html+=`<div class="g-row">
       <div class="g-label"><span class="g-turma">${t.id}</span><span class="tot-alunos" title="Total de alunos (soma dos 3 turnos)">${totalTurma(u.chave,t.id)} al.</span><span class="g-status ${s.cls}">${s.txt}</span></div>
       <div class="g-track">
-        <div class="g-grid">${meses.map(m=>`<i style="width:${m.w}%"></i>`).join("")}</div>
-        ${recessos.map(r=>{const a=pos(D(r[0])),b=pos(D(r[1]));return`<div class="banda-recesso" style="left:${a}%;width:${b-a}%"></div>`}).join("")}
-        ${temE1(t)?`<div class="barra e1" style="left:${pos(D(t.e1i))}%;width:${pos(D(t.e1f))-pos(D(t.e1i))}%"
-          data-tip="<b>${t.id} · Estágio I</b><br>${fmt(D(t.e1i))} → ${fmt(D(t.e1f))}<br>72 dias úteis"></div>`:""}
-        <div class="barra e2" style="left:${pos(D(t.e2i))}%;width:${pos(D(t.e2f))-pos(D(t.e2i))}%"
-          data-tip="<b>${t.id} · Estágio II</b><br>${fmt(D(t.e2i))} → ${fmt(D(t.e2f))}<br>56 dias úteis"></div>
-        <div class="marc cmm" style="left:${pos(D(t.cmm))}%" data-tip="<b>${t.id} · Final do CMM</b><br>${fmt(D(t.cmm))}"></div>
-        <div class="marc fim" style="left:${pos(D(t.termino))}%" data-tip="<b>${t.id} · Data de término</b><br>${fmt(D(t.termino))}"></div>
+        <div class="g-grid">${gmeses.map(m=>`<i style="width:${m.w}%"></i>`).join("")}</div>
+        ${recessos.map(r=>{const a=D(r[0]),b=D(r[1]);if(b<gIni||a>gFim)return"";const la=Math.max(0,gpos(a)),lb=Math.min(100,gpos(b));return lb>la?`<div class="banda-recesso" style="left:${la}%;width:${lb-la}%"></div>`:"";}).join("")}
+        ${temE1(t)?gBarra("e1",t.e1i,t.e1f,`<b>${t.id} · Estágio I</b><br>${fmt(D(t.e1i))} → ${fmt(D(t.e1f))}<br>72 dias úteis`):""}
+        ${gBarra("e2",t.e2i,t.e2f,`<b>${t.id} · Estágio II</b><br>${fmt(D(t.e2i))} → ${fmt(D(t.e2f))}<br>56 dias úteis`)}
+        ${gMarc("cmm",t.cmm,`<b>${t.id} · Final do CMM</b><br>${fmt(D(t.cmm))}`)}
+        ${gMarc("fim",t.termino,`<b>${t.id} · Data de término</b><br>${fmt(D(t.termino))}`)}
       </div>
     </div>`;
   });
-  html+=`<div class="linha-hoje" style="left:calc(210px + (100% - 210px) * ${pos(hoje)/100})"></div></div>`;
+  const hojePct=gpos(hoje);
+  html+=(hojePct>=0&&hojePct<=100?`<div class="linha-hoje" style="left:calc(210px + (100% - 210px) * ${hojePct/100})"></div>`:"")+`</div>`;
   document.getElementById("gantt").innerHTML=html;
 
   // tabela por turno
