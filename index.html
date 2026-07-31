@@ -283,8 +283,14 @@
   .tab-detmes{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border:1px solid var(--linha);border-radius:10px;overflow:hidden}
   .tab-detmes th{font-family:'Sora',sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--roxo-700);background:var(--roxo-100);padding:7px 10px;text-align:left;white-space:nowrap}
   .tab-detmes td{padding:6px 10px;border-bottom:1px solid #F0EDF7;white-space:nowrap}
-  .tab-detmes tr:last-child td{border-bottom:none}
+  .tab-detmes tbody tr:last-child td{border-bottom:none}
   .tab-detmes td.turma{font-family:'Sora',sans-serif;font-weight:700;color:var(--roxo-900)}
+  .det-dica{font-size:11.5px;color:var(--cinza-400);margin:2px 0 8px}
+  .tab-detmes .det-chk-cel{width:32px;text-align:center;padding-left:8px;padding-right:8px}
+  .tab-detmes input[type=checkbox]{accent-color:var(--laranja-500);cursor:pointer;width:15px;height:15px}
+  .tab-detmes tbody tr.det-row:hover{background:#FBFAFE}
+  .tab-detmes tfoot .det-total td{background:var(--roxo-100);font-weight:800;color:var(--roxo-900);border-top:2px solid var(--roxo-500);border-bottom:none;padding:8px 10px}
+  .tab-detmes tfoot .det-total td.ds-total b{color:var(--laranja-600)}
 
   @media (max-width:720px){
     body{padding:16px 10px 40px}
@@ -849,18 +855,26 @@ function renderGeral(){
       const mIni=new Date(s.d.getFullYear(),s.d.getMonth(),1);
       const mFim=new Date(s.d.getFullYear(),s.d.getMonth()+1,0);
       const det=detalheTurmasMes(mIni,mFim,unisAtivas).filter(d=>(d.est==="I"&&showE1)||(d.est==="II"&&showE2));
-      const nDet=4+unisAtivas.length+1;
-      const rows=det.map(d=>`<tr>
+      const nDet=1+4+unisAtivas.length+1;
+      const rows=det.map(d=>`<tr class="det-row" data-vals="${unisAtivas.map(u=>d.perUni[u.chave]||0).join(',')}" data-total="${d.total}">
+        <td class="det-chk-cel"><input type="checkbox" class="det-chk" checked></td>
         <td class="turma">${d.id}</td>
         <td><span class="g-status ${d.est==="I"?"st-e1":"st-e2"}">Estágio ${d.est}</span></td>
         <td>${fmt(D(d.ini))}</td><td>${fmt(D(d.fim))}</td>
         ${unisAtivas.map(u=>`<td>${d.perUni[u.chave]||0}</td>`).join("")}
         <td><b>${d.total}</b></td>
       </tr>`).join("")||`<tr><td colspan="${nDet}" style="color:var(--cinza-400)">Nenhuma turma ativa neste mês.</td></tr>`;
+      const rodape=det.length?`<tr class="det-total">
+        <td class="det-chk-cel"></td><td class="turma">Total selecionado</td><td></td><td></td><td></td>
+        ${unisAtivas.map((u,i)=>`<td class="ds" data-i="${i}">0</td>`).join("")}
+        <td class="ds-total"><b>0</b></td>
+      </tr>`:"";
       html+=`<tr class="mes-det"><td colspan="${nCols}">
+        <div class="det-dica">Marque ou desmarque as turmas para escolher o que entra na soma — a linha <b>Total selecionado</b> se atualiza sozinha.</div>
         <table class="tab-detmes">
-          <thead><tr><th>Turma</th><th>Estágio</th><th>Início</th><th>Término</th>${unisAtivas.map(u=>`<th>${u.nome}</th>`).join("")}<th>Total</th></tr></thead>
+          <thead><tr><th class="det-chk-cel"><input type="checkbox" class="det-chk-all" checked title="Marcar/desmarcar todas"></th><th>Turma</th><th>Estágio</th><th>Início</th><th>Término</th>${unisAtivas.map(u=>`<th>${u.nome}</th>`).join("")}<th>Total</th></tr></thead>
           <tbody>${rows}</tbody>
+          <tfoot>${rodape}</tfoot>
         </table>
       </td></tr>`;
     }
@@ -874,7 +888,33 @@ function renderGeral(){
     });
   });
 
+  // soma selecionável no detalhamento de cada mês aberto
+  document.querySelectorAll("#tabelaMeses .tab-detmes").forEach(tab=>{
+    tab.querySelectorAll(".det-chk").forEach(chk=>chk.addEventListener("change",()=>somarDetalhe(tab)));
+    const todas=tab.querySelector(".det-chk-all");
+    if(todas)todas.addEventListener("change",()=>{
+      tab.querySelectorAll(".det-chk").forEach(c=>c.checked=todas.checked);
+      somarDetalhe(tab);
+    });
+    somarDetalhe(tab); // inicializa a linha de total
+  });
+
   ligarTooltips();
+}
+// soma as turmas MARCADAS de um detalhamento e atualiza a linha "Total selecionado"
+function somarDetalhe(tab){
+  if(!tab)return;
+  const sums=[]; let total=0;
+  tab.querySelectorAll("tfoot .ds").forEach(()=>sums.push(0));
+  tab.querySelectorAll("tbody tr.det-row").forEach(r=>{
+    const chk=r.querySelector(".det-chk");
+    if(chk&&chk.checked){
+      (r.dataset.vals?r.dataset.vals.split(","):[]).forEach((x,i)=>sums[i]+=(+x||0));
+      total+=(+r.dataset.total||0);
+    }
+  });
+  tab.querySelectorAll("tfoot .ds").forEach(td=>td.textContent=sums[+td.dataset.i]||0);
+  const tb=tab.querySelector("tfoot .ds-total b"); if(tb)tb.textContent=total;
 }
 
 // ---- Campos de estágio (persistência no Supabase) ----
