@@ -527,7 +527,10 @@ function recalcularPeriodo(){
   const todas=UNIDADES.flatMap(u=>u.turmas);
   let min=Infinity,max=-Infinity;
   todas.forEach(t=>["e1i","e1f","e2i","e2f","cmm","termino"].forEach(k=>{
-    if(!t[k])return;const x=D(t[k]).getTime();
+    if(!t[k])return;const d=D(t[k]),x=d.getTime();
+    if(!isFinite(x))return;                       // ignora datas inválidas
+    const ano=d.getFullYear();
+    if(ano<2000||ano>2100)return;                 // ignora anos absurdos (erro de digitação, ex.: 72027)
     if(x<min)min=x;if(x>max)max=x;
   }));
   if(isFinite(min)&&isFinite(max)){
@@ -538,7 +541,8 @@ function recalcularPeriodo(){
   total=fim-ini;
   meses.length=0;
   let c=new Date(ini);
-  while(c<fim){const p=new Date(c.getFullYear(),c.getMonth()+1,1);
+  // trava de segurança: no máximo 600 meses (50 anos), para uma data errada nunca congelar o painel
+  while(c<fim&&meses.length<600){const p=new Date(c.getFullYear(),c.getMonth()+1,1);
     meses.push({d:new Date(c),w:(Math.min(p,fim)-c)/total*100});c=p;}
   recessos.length=0;
   for(let y=ini.getFullYear()-1;y<=fim.getFullYear();y++)recessos.push([`${y}-12-22`,`${y+1}-01-06`]);
