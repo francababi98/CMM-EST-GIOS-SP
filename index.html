@@ -404,7 +404,7 @@
   <section class="painel painel-cmm">
     <button type="button" class="btn-cmm-toggle" id="btnDatasToggle">🔒 Editar datas das turmas</button>
     <div id="datasEditor" class="cmm-editor" style="display:none">
-      <div class="dica" style="margin-bottom:14px">Estas datas alimentam todo o painel: linha do tempo, situação de cada turma e o cálculo de vagas. Edite as datas na tabela e clique em <b>Salvar datas</b>. Use o formulário abaixo para <b>adicionar uma turma nova</b> (regular, especial ou de sábado).</div>
+      <div class="dica" style="margin-bottom:14px">Estas datas alimentam todo o painel: linha do tempo, situação de cada turma e o cálculo de vagas. Edite as datas na tabela e clique em <b>Salvar datas</b>. Use o formulário abaixo para <b>adicionar uma turma nova</b> (regular, especial ou de sábado). <b>Dica:</b> se uma turma faz <b>somente o Estágio II</b>, deixe as duas datas do Estágio I em branco — o painel trata a turma como só de Estágio II.</div>
 
       <div class="oc-titulo" style="margin-top:0">Adicionar turma</div>
       <div class="add-turma">
@@ -412,8 +412,8 @@
         <label>Tipo<select id="ntTipo"><option value="regular">Regular</option><option value="especial">Especial</option><option value="sabado">Sábado</option></select></label>
         <label>Unidade<select id="ntUni"><option value="todas">Todas</option><option value="itaquera">Itaquera</option><option value="guaianases">Guaianases</option><option value="guarulhos">Guarulhos</option><option value="saomiguel">São Miguel</option><option value="carapicuiba">Carapicuíba</option><option value="jabaquara">Jabaquara</option><option value="santoamaro">Santo Amaro</option><option value="grajau">Grajaú</option><option value="maua">Mauá</option><option value="diadema">Diadema</option></select></label>
         <label>Início Proj. Estagiar I<input type="date" id="ntPe1i"></label>
-        <label>Início Est. I<input type="date" id="ntE1i"></label>
-        <label>Final Est. I<input type="date" id="ntE1f"></label>
+        <label>Início Est. I (opcional)<input type="date" id="ntE1i"></label>
+        <label>Final Est. I (opcional)<input type="date" id="ntE1f"></label>
         <label>Início Proj. Estagiar II<input type="date" id="ntPe2i"></label>
         <label>Início Est. II<input type="date" id="ntE2i"></label>
         <label>Final Est. II<input type="date" id="ntE2f"></label>
@@ -541,11 +541,19 @@ function recalcularPeriodo(){
 }
 recalcularPeriodo();
 
+// uma turma tem Estágio I quando as duas datas do E1 estão preenchidas;
+// se ficarem em branco, a turma faz apenas o Estágio II
+const temE1=t=>!!(t.e1i&&t.e1f);
 function status(t){
-  const e1i=D(t.e1i),e1f=D(t.e1f),e2i=D(t.e2i),e2f=D(t.e2f);
-  if(hoje<e1i)return{cls:"st-aguarda",txt:"Antes do Estágio I"};
-  if(hoje<=e1f)return{cls:"st-e1",txt:"Estágio I",ativa:true};
-  if(hoje<e2i)return{cls:"st-intervalo",txt:"Entre estágios"};
+  const e2i=D(t.e2i),e2f=D(t.e2f);
+  if(temE1(t)){
+    const e1i=D(t.e1i),e1f=D(t.e1f);
+    if(hoje<e1i)return{cls:"st-aguarda",txt:"Antes do Estágio I"};
+    if(hoje<=e1f)return{cls:"st-e1",txt:"Estágio I",ativa:true};
+    if(hoje<e2i)return{cls:"st-intervalo",txt:"Entre estágios"};
+  }else if(hoje<e2i){
+    return{cls:"st-aguarda",txt:"Antes do Estágio II"};
+  }
   if(hoje<=e2f)return{cls:"st-e2",txt:"Estágio II",ativa:true};
   return{cls:"st-concluida",txt:"Concluído"};
 }
@@ -581,8 +589,8 @@ function render(){
   const st=turmas.map(t=>({t,s:status(t)}));
   const emE1=st.filter(x=>x.s.txt==="Estágio I").length;
   const emE2=st.filter(x=>x.s.txt==="Estágio II").length;
-  const prox=st.filter(x=>D(x.t.e1i)>hoje||D(x.t.e2i)>hoje)
-    .map(x=>{const c=[D(x.t.e1i),D(x.t.e2i)].filter(d=>d>hoje);return{id:x.t.id,d:new Date(Math.min(...c))}})
+  const prox=st.filter(x=>(temE1(x.t)&&D(x.t.e1i)>hoje)||D(x.t.e2i)>hoje)
+    .map(x=>{const c=[temE1(x.t)?D(x.t.e1i):null,D(x.t.e2i)].filter(d=>d&&d>hoje);return{id:x.t.id,d:new Date(Math.min(...c))}})
     .sort((a,b)=>a.d-b.d)[0];
   const concl=st.filter(x=>x.s.txt==="Concluído").length;
   const totAlunos=turmas.reduce((s,t)=>s+totalTurma(u.chave,t.id),0);
@@ -607,8 +615,8 @@ function render(){
       <div class="g-track">
         <div class="g-grid">${meses.map(m=>`<i style="width:${m.w}%"></i>`).join("")}</div>
         ${recessos.map(r=>{const a=pos(D(r[0])),b=pos(D(r[1]));return`<div class="banda-recesso" style="left:${a}%;width:${b-a}%"></div>`}).join("")}
-        <div class="barra e1" style="left:${pos(D(t.e1i))}%;width:${pos(D(t.e1f))-pos(D(t.e1i))}%"
-          data-tip="<b>${t.id} · Estágio I</b><br>${fmt(D(t.e1i))} → ${fmt(D(t.e1f))}<br>72 dias úteis"></div>
+        ${temE1(t)?`<div class="barra e1" style="left:${pos(D(t.e1i))}%;width:${pos(D(t.e1f))-pos(D(t.e1i))}%"
+          data-tip="<b>${t.id} · Estágio I</b><br>${fmt(D(t.e1i))} → ${fmt(D(t.e1f))}<br>72 dias úteis"></div>`:""}
         <div class="barra e2" style="left:${pos(D(t.e2i))}%;width:${pos(D(t.e2f))-pos(D(t.e2i))}%"
           data-tip="<b>${t.id} · Estágio II</b><br>${fmt(D(t.e2i))} → ${fmt(D(t.e2f))}<br>56 dias úteis"></div>
         <div class="marc cmm" style="left:${pos(D(t.cmm))}%" data-tip="<b>${t.id} · Final do CMM</b><br>${fmt(D(t.cmm))}"></div>
@@ -628,7 +636,7 @@ function render(){
       <td><input type="number" class="inp-alunos" min="0" max="999" value="${getAlunos(u.chave,t.id,sig)||""}" placeholder="0" data-turma="${t.id}" data-tur="${sig}" aria-label="Alunos ${t.id} ${nome}"></td>
       <td><span class="g-status ${s.cls}">${s.txt}</span></td>
       <td>${fmt(D(t.termino))}</td><td>${fmt(D(t.cmm))}</td>
-      <td class="e1">${t.pe1i?fmt(D(t.pe1i)):"—"}</td><td class="e1">${fmt(D(t.e1i))}</td><td class="e1">${fmt(D(t.e1f))}</td>
+      <td class="e1">${t.pe1i?fmt(D(t.pe1i)):"—"}</td><td class="e1">${temE1(t)?fmt(D(t.e1i)):"—"}</td><td class="e1">${temE1(t)?fmt(D(t.e1f)):"—"}</td>
       <td class="e2">${t.pe2i?fmt(D(t.pe2i)):"—"}</td><td class="e2">${fmt(D(t.e2i))}</td><td class="e2">${fmt(D(t.e2f))}</td>
     </tr>`).join("")}).join("");
   document.querySelectorAll(".inp-alunos").forEach(inp=>{
@@ -667,7 +675,7 @@ function vagasNoMes(u,mIni,mFim){
   let e1=0,e2=0;
   u.turmas.forEach(t=>{
     const n=alunosFiltrados(u.chave,t.id);
-    if(D(t.e1i)<=mFim&&D(t.e1f)>=mIni)e1+=n;
+    if(temE1(t)&&D(t.e1i)<=mFim&&D(t.e1f)>=mIni)e1+=n;
     if(D(t.e2i)<=mFim&&D(t.e2f)>=mIni)e2+=n;
   });
   return{e1,e2};
@@ -1137,6 +1145,8 @@ const CAMPOS_DATA=[
 ];
 // datas do Projeto Estagiar — colunas novas que podem ainda não existir na tabela do banco
 const CAMPOS_EXTRA=["pe1i","pe2i"];
+// datas que NÃO são obrigatórias: Projeto Estagiar + Estágio I (para turmas que só fazem o Estágio II)
+const CAMPOS_OPCIONAIS=["pe1i","pe2i","e1i","e1f"];
 // upsert tolerante: se a tabela ainda não tiver as colunas novas, refaz sem elas (o resto continua salvando)
 async function upsertTurmas(rows){
   let r=await supabaseClient.from("turmas_sp").upsert(rows,{onConflict:"id"});
@@ -1150,7 +1160,7 @@ async function upsertTurmas(rows){
 async function salvarTurma(t){
   return await upsertTurmas([{
     id:t.id,tipo:t.tipo||"regular",ordem:t.ordem||0,unidades:t.unidades||TODAS_UNIS,
-    pe1i:t.pe1i||null,e1i:t.e1i,e1f:t.e1f,pe2i:t.pe2i||null,e2i:t.e2i,e2f:t.e2f,cmm:t.cmm,termino:t.termino
+    pe1i:t.pe1i||null,e1i:t.e1i||null,e1f:t.e1f||null,pe2i:t.pe2i||null,e2i:t.e2i,e2f:t.e2f,cmm:t.cmm,termino:t.termino
   }]);
 }
 function renderDatasEditor(){
@@ -1200,7 +1210,9 @@ document.getElementById("btnAddTurma").addEventListener("click",async()=>{
     pe1i:g("ntPe1i"),e1i:g("ntE1i"),e1f:g("ntE1f"),pe2i:g("ntPe2i"),e2i:g("ntE2i"),e2f:g("ntE2f"),cmm:g("ntCmm"),termino:g("ntTermino")
   };
   // as datas do Projeto Estagiar são opcionais; as demais são obrigatórias
-  for(const[k,l] of CAMPOS_DATA){if(!CAMPOS_EXTRA.includes(k)&&!nova[k]){alert("Preencha todas as datas da turma ("+l+").");return;}}
+  for(const[k,l] of CAMPOS_DATA){if(!CAMPOS_OPCIONAIS.includes(k)&&!nova[k]){alert("Preencha todas as datas da turma ("+l+").");return;}}
+  // Estágio I é tudo-ou-nada: ou preenche início e final, ou deixa ambos em branco (turma só de Estágio II)
+  if((nova.e1i&&!nova.e1f)||(!nova.e1i&&nova.e1f)){alert("Para o Estágio I, preencha as duas datas (início e final) — ou deixe as duas em branco se a turma faz apenas o Estágio II.");return;}
   const{error}=await salvarTurma(nova);
   if(error)console.error("Turma não persistida (rode o SQL da tabela 'turmas'):",error);
   turmaLista.push(nova);
@@ -1212,8 +1224,12 @@ document.getElementById("btnDatasSalvar").addEventListener("click",async()=>{
   const sel=(cls,t)=>document.querySelectorAll(`.${cls}[data-turma="${(t+"").replace(/"/g,'\\"')}"]`);
   const rows=turmaLista.map(t=>{
     const row={id:t.id};
-    // datas
-    sel("inp-data",t.id).forEach(inp=>{if(inp.value){row[inp.dataset.campo]=inp.value;t[inp.dataset.campo]=inp.value;}});
+    // datas: campos opcionais (Estágio I e Projeto Estagiar) podem ser apagados; os demais só salvam quando preenchidos
+    sel("inp-data",t.id).forEach(inp=>{
+      const k=inp.dataset.campo;
+      if(inp.value){row[k]=inp.value;t[k]=inp.value;}
+      else if(CAMPOS_OPCIONAIS.includes(k)){row[k]=null;t[k]="";}
+    });
     // unidades (caixinhas marcadas)
     const marcadas=[...sel("inp-uni",t.id)].filter(c=>c.checked).map(c=>c.dataset.uni);
     row.unidades=marcadas.join(",");
