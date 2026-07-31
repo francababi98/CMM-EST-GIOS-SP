@@ -312,6 +312,7 @@
     <div id="avisoVazio"></div>
     <div class="filtros" id="filtroUnidade" style="margin-top:4px"></div>
     <div class="filtros" id="filtroTurno" style="margin-top:-6px"></div>
+    <div class="filtros" id="filtroEstagio" style="margin-top:-6px"></div>
     <div class="cards" id="cardsGeral"></div>
 
     <section class="painel">
@@ -743,6 +744,8 @@ function detalheTurmasMes(mIni,mFim,unis){
 
 // filtro de unidade na Visão Geral ("todas" = consolidado)
 let filtroUniGeral="todas";
+// filtro de estágio na Visão Geral ("ambos" | "e1" | "e2")
+let filtroEstagioGeral="ambos";
 (function montarFiltroUnidade(){
   const box=document.getElementById("filtroUnidade");
   box.innerHTML=`<button class="on" data-u="todas">Todas as unidades</button>`+
@@ -762,6 +765,15 @@ let filtroUniGeral="todas";
     boxT.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
     renderGeral();
   });
+  const boxE=document.getElementById("filtroEstagio");
+  boxE.innerHTML=`<button class="on" data-e="ambos">Estágio I e II</button>`+
+    `<button data-e="e1">Só Estágio I</button><button data-e="e2">Só Estágio II</button>`;
+  boxE.addEventListener("click",e=>{
+    const b=e.target.closest("button");if(!b)return;
+    filtroEstagioGeral=b.dataset.e;
+    boxE.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
+    renderGeral();
+  });
 })();
 
 function renderGeral(){
@@ -770,9 +782,13 @@ function renderGeral(){
   const uniSel=filtroUniGeral==="todas"?null:unisAtivas[0];
   const turnoNome=(TURNOS.find(([s])=>s===filtroTurnoGeral)||[])[1];
   const sufTurno=turnoNome?` · Turno da ${turnoNome.toLowerCase()}`:"";
+  // filtro de estágio: quais estágios entram nas contas
+  const showE1=filtroEstagioGeral!=="e2", showE2=filtroEstagioGeral!=="e1";
+  const val=x=>(showE1?x.e1:0)+(showE2?x.e2:0);   // vagas de um {e1,e2} conforme o filtro
+  const sufEstagio=filtroEstagioGeral==="e1"?" · Só Estágio I":filtroEstagioGeral==="e2"?" · Só Estágio II":"";
   document.getElementById("subTitulo").textContent=(uniSel
     ?`Unidade ${uniSel.nome} · Vagas de campo necessárias por mês, calculadas a partir dos alunos preenchidos nesta unidade`
-    :`Visão consolidada das 10 unidades · Vagas de campo necessárias por mês, calculadas a partir dos alunos preenchidos em cada unidade`)+sufTurno;
+    :`Visão consolidada das 10 unidades · Vagas de campo necessárias por mês, calculadas a partir dos alunos preenchidos em cada unidade`)+sufTurno+sufEstagio;
 
   // série mensal
   const serie=meses.map(m=>{
@@ -780,7 +796,7 @@ function renderGeral(){
     const mFim=new Date(m.d.getFullYear(),m.d.getMonth()+1,0);
     const porUni=unisAtivas.map(u=>vagasNoMes(u,mIni,mFim));
     const e1=porUni.reduce((s,x)=>s+x.e1,0), e2=porUni.reduce((s,x)=>s+x.e2,0);
-    return{d:m.d,porUni,e1,e2,total:e1+e2};
+    return{d:m.d,porUni,e1,e2,total:(showE1?e1:0)+(showE2?e2:0)};
   });
   const max=Math.max(1,...serie.map(s=>s.total));
   const pico=serie.reduce((a,b)=>b.total>a.total?b:a,serie[0]);
@@ -804,11 +820,11 @@ function renderGeral(){
 
   // gráfico de barras empilhadas
   document.getElementById("graficoMeses").innerHTML=serie.map(s=>{
-    const h1=s.e1/max*170, h2=s.e2/max*170;
-    const detalhe=unisAtivas.map((u,i)=>`${u.nome}: ${s.porUni[i].e1+s.porUni[i].e2}`).join("<br>");
+    const h1=(showE1?s.e1:0)/max*170, h2=(showE2?s.e2:0)/max*170;
+    const detalhe=unisAtivas.map((u,i)=>`${u.nome}: ${val(s.porUni[i])}`).join("<br>");
     return`<div class="gm-col ${s===pico&&s.total>0?"pico":""}">
       <div class="gm-val">${s.total||""}</div>
-      <div class="gm-bar" data-tip="<b>${mesLongo(s.d)}</b><br>Estágio I: ${s.e1} · Estágio II: ${s.e2}<br>${detalhe}">
+      <div class="gm-bar" data-tip="<b>${mesLongo(s.d)}</b><br>Estágio I: ${showE1?s.e1:0} · Estágio II: ${showE2?s.e2:0}<br>${detalhe}">
         <div class="gm-seg-e2" style="height:${h2}px"></div>
         <div class="gm-seg-e1" style="height:${h1}px"></div>
       </div>
@@ -820,19 +836,19 @@ function renderGeral(){
   document.getElementById("theadMeses").innerHTML=
     `<tr><th>Mês</th>${unisAtivas.map(u=>`<th>${u.nome}</th>`).join("")}<th>Estágio I</th><th>Estágio II</th><th>Total de vagas</th></tr>`;
   document.getElementById("tabelaMeses").innerHTML=serie.filter(s=>s.total>0).map(s=>{
-    const tots=s.porUni.map(x=>x.e1+x.e2);
+    const tots=s.porUni.map(val);
     const ym=s.d.getFullYear()+"-"+s.d.getMonth();
     const aberto=mesesAbertos.has(ym);
     let html=`<tr class="mes-row" data-mes="${ym}">
       <td class="turma">${aberto?"▾":"▸"} ${mesLongo(s.d)}</td>
       ${tots.map(t=>`<td>${t}</td>`).join("")}
-      <td class="e1">${s.e1}</td><td class="e2">${s.e2}</td>
+      <td class="e1">${showE1?s.e1:"—"}</td><td class="e2">${showE2?s.e2:"—"}</td>
       <td class="${s===pico?"pico":""}"><b>${s.total}</b></td>
     </tr>`;
     if(aberto){
       const mIni=new Date(s.d.getFullYear(),s.d.getMonth(),1);
       const mFim=new Date(s.d.getFullYear(),s.d.getMonth()+1,0);
-      const det=detalheTurmasMes(mIni,mFim,unisAtivas);
+      const det=detalheTurmasMes(mIni,mFim,unisAtivas).filter(d=>(d.est==="I"&&showE1)||(d.est==="II"&&showE2));
       const nDet=4+unisAtivas.length+1;
       const rows=det.map(d=>`<tr>
         <td class="turma">${d.id}</td>
