@@ -715,35 +715,16 @@ function mostrarToast(html){
 (function(){
 const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
 const UNIDADES=["BH Centro","Venda Nova","Contagem"];
-const CAMPOS=[
-  {campo:"Hospital João XXIII",             a:"BH Centro",  b:"Venda Nova", vagas:80, prec:true},
-  {campo:"Hospital Regional",               a:"Contagem",   b:"BH Centro",  vagas:60, prec:false},
-  {campo:"Santa Casa de Belo Horizonte",    a:"Venda Nova", b:"Contagem",   vagas:90, prec:true},
-  {campo:"Hospital das Clínicas — UFMG",    a:"BH Centro",  b:"Contagem",   vagas:96, prec:true},
-  {campo:"Hospital Odilon Behrens",         a:"BH Centro",  b:"Venda Nova", vagas:64, prec:true},
-  {campo:"Hospital Risoleta Tolentino Neves",a:"Venda Nova", b:"BH Centro",  vagas:54, prec:false},
-  {campo:"Hospital Municipal de Contagem",  a:"Contagem",   b:"Venda Nova", vagas:72, prec:true},
-  {campo:"Hospital Júlia Kubitschek",       a:"BH Centro",  b:"Contagem",   vagas:48, prec:true},
-  {campo:"Maternidade Odete Valadares",     a:"Venda Nova", b:"Contagem",   vagas:36, prec:false},
-  {campo:"Hospital Eduardo de Menezes",     a:"Contagem",   b:"BH Centro",  vagas:42, prec:false},
-  {campo:"UPA Venda Nova",                  a:"Venda Nova", b:"BH Centro",  vagas:30, prec:false},
-  {campo:"Hospital Sofia Feldman",          a:"BH Centro",  b:"Venda Nova", vagas:28, prec:true},
-];
 const MESES=[
   {v:"2026-06", nome:"Junho / 2026"},{v:"2026-07", nome:"Julho / 2026"},{v:"2026-08", nome:"Agosto / 2026"},
   {v:"2026-09", nome:"Setembro / 2026"},{v:"2026-10", nome:"Outubro / 2026"},{v:"2026-11", nome:"Novembro / 2026"},
   {v:"2026-12", nome:"Dezembro / 2026"},
 ];
-function ocupacaoDe(idx, mesV, vagas){
-  const m=parseInt(mesV.split("-")[1],10);
-  const s=Math.sin((idx+1)*12.9898+m*78.233)*43758.5453;
-  let frac=s-Math.floor(s); frac=0.45+frac*0.6; if(frac>1) frac=1;
-  return Math.round(vagas*frac);
-}
-function parImpar(campo, mesV){
-  const m=parseInt(mesV.split("-")[1],10);
-  return (m%2===0)?{par:campo.a,impar:campo.b}:{par:campo.b,impar:campo.a};
-}
+// dados vêm do banco (DB.campos + DB.alocacoes)
+function DBready(){ return window.DB && Array.isArray(DB.campos) && Array.isArray(DB.alocacoes); }
+function totalVagas(c){ return ["M","T","N","S","D"].reduce((s,k)=>s+((c.vagas&&c.vagas[k])||0),0); }
+function camposAtivos(){ return DB.campos.filter(c=>c.status==="ativo"); }
+function allocsDoMes(comp){ return DB.alocacoes.filter(a=>a.competencia===comp); }
 let mesAtual="2026-08", ordenarPor="ocup", ordemAsc=false, pagina=1;
 const PAG_TAM=8;
 
@@ -761,21 +742,29 @@ function nomeMes(v){ return (MESES.find(m=>m.v===v)||{}).nome||v; }
 function nomeMesCurto(v){ return nomeMes(v).split(" / ")[0]; }
 
 function linhasDoMes(){
-  return CAMPOS.map((c,idx)=>{
-    const ocup=ocupacaoDe(idx,mesAtual,c.vagas);
-    const pct=Math.round(ocup/c.vagas*100);
-    const pi=parImpar(c,mesAtual);
-    return {idx,campo:c.campo,par:pi.par,impar:pi.impar,vagas:c.vagas,ocup,livre:c.vagas-ocup,pct,prec:c.prec,status:statusDe(pct),mes:nomeMesCurto(mesAtual)};
-  });
+  if(!DBready()) return [];
+  const comp=mesAtual;
+  return camposAtivos().map(c=>{
+    const allocs=DB.alocacoes.filter(a=>a.campoId===c.id && a.competencia===comp);
+    const ocup=allocs.reduce((s,a)=>s+(a.alunos||0),0);
+    const cap=totalVagas(c);
+    const pct=cap?Math.round(ocup/cap*100):0;
+    const par=[...new Set(allocs.filter(a=>a.semana==="par"||a.modelo==="semana_todos"||a.modelo.indexOf("fds")===0).map(a=>a.unidade).filter(Boolean))];
+    const impar=[...new Set(allocs.filter(a=>a.semana==="impar").map(a=>a.unidade).filter(Boolean))];
+    return {id:c.id, campo:c.nome, par:par.join(", ")||"—", impar:impar.join(", ")||"—", vagas:cap, ocup, pct, prec:!!c.preceptor, status:statusDe(Math.min(pct,100)), mes:nomeMesCurto(comp), _has:allocs.length>0};
+  }).filter(l=>l._has);
 }
-function renderCards(linhas){
-  const totalCampos=linhas.length;
-  const vagasTotais=linhas.reduce((s,l)=>s+l.vagas,0);
-  const vagasOcup=linhas.reduce((s,l)=>s+l.ocup,0);
-  const vagasLivres=vagasTotais-vagasOcup;
-  const unis=new Set(); linhas.forEach(l=>{ if(l.ocup>0){unis.add(l.par);unis.add(l.impar);} });
+function renderCards(){
+  const comp=mesAtual;
+  const ativos=DBready()?camposAtivos():[];
+  const allocs=DBready()?allocsDoMes(comp):[];
+  const totalCampos=ativos.length;
+  const vagasTotais=ativos.reduce((s,c)=>s+totalVagas(c),0);
+  const vagasOcup=allocs.reduce((s,a)=>s+(a.alunos||0),0);
+  const vagasLivres=Math.max(0,vagasTotais-vagasOcup);
+  const unis=new Set(allocs.map(a=>a.unidade).filter(Boolean));
   const cards=[
-    {ic:"🏥",tit:"Campos de Estágio",num:totalCampos,desc:"Campos cadastrados",cls:""},
+    {ic:"🏥",tit:"Campos de Estágio",num:totalCampos,desc:"Campos ativos cadastrados",cls:""},
     {ic:"🏫",tit:"Unidades c/ Campos",num:unis.size,desc:"Unidades com alunos alocados",cls:""},
     {ic:"👨‍🎓",tit:"Alunos em Estágio",num:vagasOcup,desc:"Total de alunos alocados",cls:"laranja"},
     {ic:"🪑",tit:"Vagas Totais",num:vagasTotais,desc:"Capacidade somada dos campos",cls:""},
@@ -784,12 +773,16 @@ function renderCards(linhas){
   ];
   $("#cards").innerHTML=cards.map(c=>`<div class="card ${c.cls}"><div class="ic">${c.ic}</div><div class="tit">${c.tit}</div><div class="num">${c.num}</div><div class="desc">${c.desc}</div></div>`).join("");
 }
-function renderBarras(linhas){
+function renderBarras(){
+  const comp=mesAtual;
+  const ativos=DBready()?camposAtivos():[];
+  const allocs=DBready()?allocsDoMes(comp):[];
   const porUni={}; UNIDADES.forEach(u=>porUni[u]=0);
-  let totalVagas=0,totalOcup=0;
-  linhas.forEach(l=>{ porUni[l.par]+=l.ocup/2; porUni[l.impar]+=l.ocup/2; totalVagas+=l.vagas; totalOcup+=l.ocup; });
-  const livres=totalVagas-totalOcup;
-  let itens=Object.entries(porUni).map(([nome,v])=>({nome,v:Math.round(v)})).filter(i=>i.v>0).sort((a,b)=>b.v-a.v);
+  allocs.forEach(a=>{ if(porUni[a.unidade]==null)porUni[a.unidade]=0; porUni[a.unidade]+=(a.alunos||0); });
+  const vagasTotais=ativos.reduce((s,c)=>s+totalVagas(c),0);
+  const ocup=allocs.reduce((s,a)=>s+(a.alunos||0),0);
+  const livres=Math.max(0,vagasTotais-ocup);
+  let itens=Object.entries(porUni).map(([nome,v])=>({nome,v})).filter(i=>i.v>0).sort((a,b)=>b.v-a.v);
   itens.push({nome:"Livres",v:livres,livres:true});
   const max=Math.max(...itens.map(i=>i.v),1);
   $("#barras").innerHTML=itens.map(i=>`<div class="barra-row ${i.livres?"livres":""}"><div class="barra-nome" title="${i.nome}">${i.nome}</div><div class="barra-track"><div class="barra-fill" data-w="${(i.v/max*100).toFixed(1)}"></div></div><div class="barra-val">${i.v}</div></div>`).join("");
@@ -800,7 +793,7 @@ function filtrarOrdenar(linhas){
   const fu=$("#fUnidade").value, fp=$("#fPrec").value, fs=$("#dStatus").value;
   let arr=linhas.filter(l=>{
     if(q && !l.campo.toLowerCase().includes(q)) return false;
-    if(fu && l.par!==fu && l.impar!==fu) return false;
+    if(fu && l.par.indexOf(fu)<0 && l.impar.indexOf(fu)<0) return false;
     if(fp==="sim" && !l.prec) return false;
     if(fp==="nao" && l.prec) return false;
     if(fs && l.status.cls!==fs) return false;
@@ -820,7 +813,7 @@ function renderTabela(linhas){
   if(!itens.length){
     $("#dTbody").innerHTML=`<tr><td colspan="7" class="vazio">Nenhum campo encontrado com os filtros atuais.</td></tr>`;
   }else{
-    $("#dTbody").innerHTML=itens.map(l=>`<tr data-idx="${l.idx}">
+    $("#dTbody").innerHTML=itens.map(l=>`<tr data-id="${l.id}">
         <td><span class="campo-nome">${l.campo}</span></td>
         <td><span class="uni-badge">${l.par}</span></td>
         <td><span class="uni-badge impar">${l.impar}</span></td>
@@ -841,7 +834,7 @@ function renderTabela(linhas){
   b+=`<button data-p="next" ${pagina===totalPag?"disabled":""}>›</button>`;
   $("#dPagBtns").innerHTML=b;
 }
-function render(){ const linhas=linhasDoMes(); renderCards(linhas); renderBarras(linhas); renderTabela(linhas); }
+function render(){ renderCards(); renderBarras(); renderTabela(linhasDoMes()); }
 
 $("#selMes").addEventListener("change",e=>{ mesAtual=e.target.value; pagina=1; render(); });
 $("#dBusca").addEventListener("input",()=>{ pagina=1; renderTabela(linhasDoMes()); });
@@ -858,9 +851,9 @@ $("#dPagBtns").addEventListener("click",e=>{
   renderTabela(linhasDoMes());
 });
 $("#dTbody").addEventListener("click",e=>{
-  const tr=e.target.closest("tr[data-idx]"); if(!tr) return;
-  const l=linhasDoMes()[+tr.dataset.idx];
-  mostrarToast(`Detalhes de <b>${l.campo}</b> — disponível na próxima etapa do sistema.`);
+  const tr=e.target.closest("tr[data-id]"); if(!tr) return;
+  const c=DBready()?DB.campos.find(x=>x.id===+tr.dataset.id):null;
+  mostrarToast(`Detalhes de <b>${c?c.nome:"campo"}</b> — disponível na próxima etapa do sistema.`);
 });
 window.dashRerender=render;
 render();
@@ -1340,6 +1333,9 @@ $("#aSalvarNova").addEventListener("click",()=>salvar(true));
 window.alocShowList=()=>{ preencherCampos(); $("#alocForm").classList.add("hidden"); $("#alocLista").classList.remove("hidden"); renderLista(); };
 renderLista();
 })();
+
+// DB já existe (campos/alocações em memória) — renderiza o Dashboard com os dados
+if(window.dashRerender) window.dashRerender();
 </script>
 
 <script>
@@ -1385,6 +1381,7 @@ renderLista();
     }
     if(window.camposShowList) window.camposShowList();
     if(window.alocShowList) window.alocShowList();
+    if(window.dashRerender) window.dashRerender();
     mostrarToast("✅ Conectado ao banco de dados.");
   }
   carregar();
