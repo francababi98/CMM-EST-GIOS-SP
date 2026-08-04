@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Gestão de Estágios — Belo Horizonte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --roxo-900:#241046; --roxo-700:#3B1E6E; --roxo-500:#5B34A6; --roxo-300:#9B7BD6; --roxo-100:#EDE7F8;
+    --laranja-600:#E85D04; --laranja-500:#FF6B00; --laranja-100:#FFE8D6;
+    --fundo:#F7F5FB; --branco:#FFFFFF; --cinza-700:#4A4458; --cinza-400:#9A93AB; --linha:#E4DFEF;
+    --verde:#1B9E77; --verde-bg:#EAF7F1; --amarelo:#E6A700; --amarelo-bg:#FCF3DA;
+    --vermelho:#DC2B4B; --vermelho-bg:#FCE7EC;
+    --sombra-sm:0 1px 2px rgba(36,16,70,.04),0 2px 6px rgba(36,16,70,.05);
+    --sombra-md:0 6px 20px rgba(36,16,70,.08),0 2px 6px rgba(36,16,70,.04);
+    --sombra-lg:0 16px 40px rgba(36,16,70,.14),0 4px 12px rgba(36,16,70,.06);
+    --grad-roxo:linear-gradient(135deg,#3B1E6E 0%,#241046 100%);
+    --grad-laranja:linear-gradient(135deg,#FF8A3D 0%,#E85D04 100%);
+    --grad-marca:linear-gradient(120deg,var(--roxo-700) 0%,var(--roxo-500) 45%,var(--laranja-500) 110%);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--cinza-700);
+    background:
+      radial-gradient(900px 500px at 12% -8%,rgba(91,52,166,.10),transparent 60%),
+      radial-gradient(760px 460px at 105% 4%,rgba(255,107,0,.09),transparent 55%),
+      linear-gradient(180deg,#F5F2FB 0%,var(--fundo) 42%);
+    background-attachment:fixed;min-height:100vh}
+  .hidden{display:none!important}
+
+  /* ---------- Barra superior fixa ---------- */
+  .topbar{position:sticky;top:0;z-index:40;background:var(--grad-roxo);color:#fff;box-shadow:0 8px 26px rgba(36,16,70,.28)}
+  .topbar-in{max-width:1280px;margin:0 auto;padding:12px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:14px 24px}
+  .brand{display:flex;align-items:center;gap:13px}
+  .brand .logo{width:42px;height:42px;border-radius:12px;background:var(--grad-laranja);display:flex;align-items:center;justify-content:center;font-size:22px;flex:none;box-shadow:0 6px 16px rgba(232,93,4,.4)}
+  .brand h1{font-family:'Sora',sans-serif;font-weight:800;font-size:18px;line-height:1.1;color:#fff}
+  .brand .tag{font-size:11px;color:#C9BCE6;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-top:2px}
+  .nav{display:flex;gap:8px}
+  .nav button{font-family:'Sora',sans-serif;font-weight:700;font-size:13.5px;color:#D9CEF0;background:transparent;border:none;text-decoration:none;padding:9px 18px;border-radius:11px;transition:all .15s;cursor:pointer}
+  .nav button:hover{background:rgba(255,255,255,.1);color:#fff}
+  .nav button.on{background:#fff;color:var(--roxo-900)}
+  .topbar-right{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-left:auto}
+  .comp{display:flex;flex-direction:column;gap:4px}
+  .comp label{font-size:10.5px;color:#C9BCE6;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .comp select{font-family:'Sora',sans-serif;font-weight:700;font-size:14px;color:var(--roxo-900);background:#fff;border:none;border-radius:10px;padding:9px 14px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.15);min-width:160px}
+  .comp select:focus{outline:2px solid var(--laranja-500)}
+  .atualiz{font-size:11.5px;color:#C9BCE6;text-align:right;line-height:1.5}
+  .atualiz b{color:#fff;font-weight:600}
+
+  .wrap{max-width:1280px;margin:0 auto;padding:26px 24px 70px}
+
+  /* ---------- Cards indicadores (Dashboard) ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px;margin-bottom:26px}
+  .card{position:relative;background:linear-gradient(180deg,#fff,#FDFCFF);border:1px solid var(--linha);border-radius:18px;padding:18px 20px;box-shadow:var(--sombra-sm);transition:transform .18s cubic-bezier(.4,0,.2,1),box-shadow .18s;overflow:hidden}
+  .card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--roxo-500);opacity:.9}
+  .card.laranja::before{background:var(--grad-laranja)}
+  .card.verde::before{background:var(--verde)}
+  .card:hover{transform:translateY(-3px);box-shadow:var(--sombra-md)}
+  .card .ic{position:absolute;top:15px;right:16px;font-size:22px;opacity:.85}
+  .card .tit{font-size:12px;font-weight:700;color:var(--cinza-400);text-transform:uppercase;letter-spacing:.05em;padding-right:30px}
+  .card .num{font-family:'Sora',sans-serif;font-weight:800;font-size:34px;color:var(--roxo-700);line-height:1.05;margin-top:8px}
+  .card.laranja .num{background:var(--grad-laranja);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .card.verde .num{color:var(--verde)}
+  .card .desc{font-size:12px;color:var(--cinza-400);margin-top:5px}
+
+  /* ---------- Painéis ---------- */
+  .painel{background:var(--branco);border:1px solid var(--linha);border-radius:20px;padding:24px;margin-bottom:22px;box-shadow:var(--sombra-md)}
+  .painel-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .painel h2{font-family:'Sora',sans-serif;font-size:18px;color:var(--roxo-900);display:flex;align-items:center;gap:10px}
+  .painel h2::before{content:"";width:4px;height:20px;border-radius:999px;background:var(--grad-marca);flex:none}
+  .painel .dica{font-size:12.5px;color:var(--cinza-400);margin:6px 0 18px}
+
+  /* ---------- Gráfico de barras horizontais ---------- */
+  .barras{display:flex;flex-direction:column;gap:13px}
+  .barra-row{display:grid;grid-template-columns:130px 1fr 58px;align-items:center;gap:12px}
+  .barra-nome{font-size:13px;font-weight:600;color:var(--roxo-900);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .barra-track{background:var(--roxo-100);border-radius:999px;height:22px;overflow:hidden;position:relative}
+  .barra-fill{height:100%;border-radius:999px;background:var(--grad-marca);width:0;transition:width .9s cubic-bezier(.22,1,.36,1)}
+  .barra-row.livres .barra-fill{background:repeating-linear-gradient(45deg,var(--roxo-300) 0 8px,#B7A0E0 8px 16px)}
+  .barra-val{font-family:'Sora',sans-serif;font-weight:700;font-size:14px;color:var(--roxo-700);text-align:left}
+
+  /* ---------- Botões ---------- */
+  .btn{font-family:'Sora',sans-serif;font-weight:700;font-size:13.5px;padding:11px 20px;border-radius:12px;border:none;cursor:pointer;transition:all .16s;display:inline-flex;align-items:center;gap:8px}
+  .btn-primary{background:var(--grad-laranja);color:#fff;box-shadow:0 6px 16px rgba(232,93,4,.32)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(232,93,4,.4)}
+  .btn-roxo{background:var(--grad-roxo);color:#fff;box-shadow:var(--sombra-md)}
+  .btn-roxo:hover{transform:translateY(-2px)}
+  .btn-ghost{background:#fff;color:var(--roxo-700);border:1.5px solid var(--linha)}
+  .btn-ghost:hover{border-color:var(--roxo-500);background:var(--roxo-100)}
+  .btn-perigo{background:#fff;color:var(--vermelho);border:1.5px solid #F3C6cf}
+  .btn-perigo:hover{background:var(--vermelho-bg)}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+
+  /* ---------- Ferramentas / filtros ---------- */
+  .ferramentas{display:flex;flex-wrap:wrap;gap:11px;align-items:center;margin-bottom:16px}
+  .busca{position:relative;flex:1;min-width:210px}
+  .busca input{width:100%;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--roxo-900);padding:10px 14px 10px 38px;border:1.5px solid var(--linha);border-radius:11px;background:#FDFCFF}
+  .busca input:focus{outline:none;border-color:var(--laranja-500);background:#fff;box-shadow:0 0 0 3px rgba(255,107,0,.12)}
+  .busca::before{content:"🔍";position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:13px;opacity:.55}
+  .ferramentas select{font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--roxo-700);padding:10px 13px;border:1.5px solid var(--linha);border-radius:11px;background:#FDFCFF;cursor:pointer}
+  .ferramentas select:focus{outline:none;border-color:var(--laranja-500);background:#fff}
+  .btn-limpar{font-size:12.5px;font-weight:600;color:var(--cinza-400);background:none;border:none;cursor:pointer;padding:8px 6px}
+  .btn-limpar:hover{color:var(--laranja-600)}
+
+  /* ---------- Tabelas ---------- */
+  .tab-scroll{overflow-x:auto;border-radius:14px;border:1px solid var(--linha)}
+  table{width:100%;border-collapse:collapse;min-width:880px;background:#fff}
+  thead th{position:sticky;top:0;background:linear-gradient(180deg,#F3EFFB,#EDE7F8);font-family:'Sora',sans-serif;font-size:11.5px;font-weight:700;color:var(--roxo-700);text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:13px 16px;white-space:nowrap;cursor:pointer;user-select:none;border-bottom:2px solid var(--roxo-100);z-index:2}
+  thead th:hover{color:var(--laranja-600)}
+  thead th .arrow{font-size:9px;opacity:.4;margin-left:4px}
+  thead th.sorted .arrow{opacity:1;color:var(--laranja-600)}
+  thead th.center{text-align:center}
+  tbody td{padding:13px 16px;font-size:13.5px;border-bottom:1px solid #F1EEF8;vertical-align:middle}
+  tbody tr{transition:background .13s;cursor:pointer}
+  tbody tr:hover{background:#FAF7FF}
+  tbody tr:last-child td{border-bottom:none}
+  .campo-nome{font-weight:700;color:var(--roxo-900);font-family:'Sora',sans-serif;font-size:13.5px}
+  .center{text-align:center}
+  .vazio{text-align:center;padding:40px 16px;color:var(--cinza-400);font-size:14px}
+
+  /* dashboard mapa */
+  .uni-badge{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--cinza-700)}
+  .uni-badge::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--roxo-500);flex:none}
+  .uni-badge.impar::before{background:var(--laranja-500)}
+  .mes-ref{font-size:12.5px;color:var(--cinza-700);font-weight:500}
+  .ocup-cell{min-width:150px}
+  .ocup-top{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:5px}
+  .ocup-pct{font-family:'Sora',sans-serif}
+  .ocup-frac{color:var(--cinza-400);font-weight:600}
+  .ocup-bar{height:8px;border-radius:999px;background:var(--roxo-100);overflow:hidden}
+  .ocup-in{height:100%;border-radius:999px;width:0;transition:width .8s cubic-bezier(.22,1,.36,1)}
+  .ocup-in.v{background:var(--verde)} .ocup-in.a{background:var(--amarelo)} .ocup-in.r{background:var(--vermelho)}
+  .prec{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;padding:4px 12px;border-radius:999px}
+  .prec.sim{background:var(--verde-bg);color:var(--verde)}
+  .prec.nao{background:#F1EEF8;color:var(--cinza-400)}
+
+  /* campos lista */
+  .endereco{font-size:12.5px;color:var(--cinza-700);max-width:230px}
+  .end-cidade{display:block;font-size:11.5px;color:var(--cinza-400);margin-top:1px}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:999px}
+  .pill.curso{background:var(--roxo-100);color:var(--roxo-700)}
+  .pill.curso.ambos{background:var(--laranja-100);color:var(--laranja-600)}
+  .vagas-n{font-family:'Sora',sans-serif;font-weight:800;font-size:15px;color:var(--roxo-700)}
+  .turnos{display:flex;gap:4px}
+  .turnos i{font-style:normal;font-size:10px;font-weight:800;width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--roxo-100);color:var(--roxo-700)}
+  .sim-nao{font-size:12.5px;font-weight:700}
+  .sim-nao.sim{color:var(--verde)} .sim-nao.nao{color:var(--cinza-400)}
+
+  /* status (compartilhado) */
+  .status{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;padding:5px 13px;border-radius:999px;white-space:nowrap}
+  .status.disp{background:var(--verde-bg);color:var(--verde)}
+  .status.quase{background:var(--amarelo-bg);color:#B98600}
+  .status.lot{background:var(--vermelho-bg);color:var(--vermelho)}
+  .status.ativo{background:var(--verde-bg);color:var(--verde)}
+  .status.inativo{background:#F1EEF8;color:var(--cinza-400)}
+
+  .legenda-status{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;font-weight:600;color:var(--cinza-700);margin-top:14px}
+  .legenda-status span{display:flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .dot.v{background:var(--verde)} .dot.a{background:var(--amarelo)} .dot.r{background:var(--vermelho)}
+
+  /* ---------- Paginação ---------- */
+  .pag{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;flex-wrap:wrap}
+  .pag-info{font-size:12.5px;color:var(--cinza-400)}
+  .pag-btns{display:flex;gap:6px}
+  .pag-btns button{font-family:'Sora',sans-serif;font-size:13px;font-weight:700;min-width:36px;height:36px;padding:0 10px;border:1.5px solid var(--linha);background:#fff;color:var(--roxo-700);border-radius:10px;cursor:pointer;transition:all .13s}
+  .pag-btns button:hover:not(:disabled){border-color:var(--roxo-500);background:var(--roxo-100)}
+  .pag-btns button.on{background:var(--grad-roxo);color:#fff;border-color:transparent}
+  .pag-btns button:disabled{opacity:.4;cursor:not-allowed}
+
+  /* ---------- Formulário de campo ---------- */
+  .form-top{display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+  .btn-voltar{font-family:'Sora',sans-serif;font-weight:700;font-size:13.5px;color:var(--roxo-700);background:#fff;border:1.5px solid var(--linha);border-radius:11px;padding:9px 16px;cursor:pointer;transition:all .15s}
+  .btn-voltar:hover{border-color:var(--roxo-500);background:var(--roxo-100)}
+  .form-title{font-family:'Sora',sans-serif;font-weight:800;font-size:22px;color:var(--roxo-900)}
+  .secao{background:var(--branco);border:1px solid var(--linha);border-radius:18px;padding:22px 24px;margin-bottom:18px;box-shadow:var(--sombra-sm)}
+  .secao h3{font-family:'Sora',sans-serif;font-size:15px;color:var(--roxo-700);margin-bottom:18px;display:flex;align-items:center;gap:9px}
+  .secao h3 .sic{width:30px;height:30px;border-radius:9px;background:var(--roxo-100);display:flex;align-items:center;justify-content:center;font-size:15px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+  .campo-form{display:flex;flex-direction:column;gap:6px}
+  .campo-form.full{grid-column:1/-1}
+  label.lab{font-size:12.5px;font-weight:700;color:var(--roxo-700)}
+  .campo-form input[type=text],.campo-form input[type=email],.campo-form input[type=tel],.campo-form input[type=number],.campo-form input[type=time],.campo-form textarea,.campo-form select{
+    font-family:'Inter',sans-serif;font-size:13.5px;color:var(--roxo-900);padding:10px 13px;border:1.5px solid var(--linha);border-radius:11px;background:#FDFCFF;width:100%}
+  .campo-form input:focus,.campo-form textarea:focus,.campo-form select:focus{outline:none;border-color:var(--laranja-500);background:#fff;box-shadow:0 0 0 3px rgba(255,107,0,.12)}
+  .campo-form textarea{resize:vertical;min-height:90px;line-height:1.5}
+  .hint{font-size:11.5px;color:var(--cinza-400)}
+  .seg{display:inline-flex;flex-wrap:wrap;gap:6px;background:var(--roxo-100);padding:4px;border-radius:12px}
+  .seg button{font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:var(--roxo-700);background:transparent;border:none;padding:8px 16px;border-radius:9px;cursor:pointer;transition:all .14s}
+  .seg button:hover{background:rgba(255,255,255,.6)}
+  .seg button.on{background:#fff;color:var(--roxo-900);box-shadow:var(--sombra-sm)}
+  .seg.laranja button.on{background:var(--grad-laranja);color:#fff}
+  .chk-grid{display:flex;flex-wrap:wrap;gap:10px}
+  .chk{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:var(--cinza-700);background:#FDFCFF;border:1.5px solid var(--linha);padding:10px 15px;border-radius:11px;cursor:pointer;transition:all .14s;user-select:none}
+  .chk:hover{border-color:var(--roxo-300)}
+  .chk input{width:17px;height:17px;accent-color:var(--laranja-500);cursor:pointer}
+  .chk.on{border-color:var(--laranja-500);background:var(--laranja-100);color:var(--laranja-600)}
+  .doc-custom{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}
+  .doc-custom input{flex:1;min-width:180px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--roxo-900);padding:10px 13px;border:1.5px solid var(--linha);border-radius:11px;background:#FDFCFF}
+  .doc-custom input:focus{outline:none;border-color:var(--laranja-500);background:#fff}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chip-doc{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;background:var(--roxo-100);color:var(--roxo-700);padding:6px 12px;border-radius:999px}
+  .chip-doc button{background:none;border:none;color:var(--roxo-500);cursor:pointer;font-size:15px;line-height:1;padding:0}
+  .chip-doc button:hover{color:var(--laranja-600)}
+  .horario-row{display:grid;grid-template-columns:120px 1fr 24px 1fr;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #F1EEF8}
+  .horario-row:last-child{border-bottom:none}
+  .horario-row .turno-lbl{font-weight:700;font-size:13.5px;color:var(--roxo-900);display:flex;align-items:center;gap:8px}
+  .horario-row .turno-tag{font-size:10px;font-weight:800;width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--roxo-100);color:var(--roxo-700)}
+  .horario-row .hIni,.horario-row .hFim{font-family:'Inter',sans-serif;font-size:13.5px;color:var(--roxo-900);padding:9px 12px;border:1.5px solid var(--linha);border-radius:11px;background:#FDFCFF;width:100%}
+  .horario-row .hIni:focus,.horario-row .hFim:focus{outline:none;border-color:var(--laranja-500);background:#fff}
+  .horario-row .sep{text-align:center;color:var(--cinza-400);font-weight:700}
+  .horario-vazio{font-size:12.5px;color:var(--cinza-400);font-style:italic;padding:8px 0}
+  .cond{margin-top:0}
+  .barra-acoes{display:flex;flex-wrap:wrap;gap:11px;justify-content:flex-end;padding-top:6px}
+  .barra-acoes .esq{margin-right:auto;display:flex;gap:11px;flex-wrap:wrap}
+
+  /* ---------- Contatos + Vagas por período ---------- */
+  .contato-row{display:grid;grid-template-columns:1fr 1fr 1fr 34px;gap:9px;margin-bottom:9px}
+  .contato-row input{font-family:'Inter',sans-serif;font-size:13.5px;color:var(--roxo-900);padding:10px 12px;border:1.5px solid var(--linha);border-radius:11px;background:#FDFCFF;width:100%}
+  .contato-row input:focus{outline:none;border-color:var(--laranja-500);background:#fff}
+  .contato-row .ct-rm{background:#fff;border:1.5px solid var(--linha);border-radius:10px;color:var(--vermelho);font-size:17px;line-height:1;cursor:pointer}
+  .contato-row .ct-rm:hover{background:var(--vermelho-bg);border-color:#F3C6cf}
+  .vagas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px}
+  .vg{display:flex;flex-direction:column;gap:5px;background:#FDFCFF;border:1.5px solid var(--linha);border-radius:12px;padding:11px 13px}
+  .vg span{font-size:11.5px;font-weight:700;color:var(--roxo-700)}
+  .vg input{font-family:'Sora',sans-serif;font-size:17px;font-weight:700;color:var(--roxo-900);border:none;background:transparent;width:100%;padding:0}
+  .vg input:focus{outline:none}
+  .vg.total{background:var(--roxo-100);border-color:transparent;justify-content:center}
+  .vg.total b{font-family:'Sora',sans-serif;font-size:20px;color:var(--roxo-700)}
+  @media(max-width:560px){.contato-row{grid-template-columns:1fr 1fr;grid-auto-rows:auto}.contato-row .ct-rm{grid-column:2}}
+
+  /* ---------- Alocação ---------- */
+  .seg button.off{opacity:.35;pointer-events:none}
+  .seg button .ocp{display:inline-block;margin-left:8px;font-style:normal;font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--verde-bg);color:var(--verde);vertical-align:middle}
+  .seg button .ocp.full{background:var(--vermelho-bg);color:var(--vermelho)}
+  .seg button .ocp.none{background:#EFEAF7;color:var(--cinza-400)}
+  .seg button .ocp:empty{display:none}
+  .seg button.on .ocp{background:rgba(255,255,255,.35);color:#fff}
+  .seg button.on .ocp.full{background:#fff;color:var(--vermelho)}
+  .aloc-grid{display:grid;grid-template-columns:minmax(0,1fr) 336px;gap:18px;align-items:start}
+  @media(max-width:900px){.aloc-grid{grid-template-columns:1fr}}
+  .info-box{display:none;flex-wrap:wrap;gap:10px 22px;background:#FAF7FF;border:1px dashed var(--roxo-300);border-radius:12px;padding:13px 15px;margin-top:14px;font-size:13px;color:var(--roxo-900);font-weight:600}
+  .info-box.show{display:flex}
+  .info-box .item{display:flex;flex-direction:column;gap:2px}
+  .info-box .item span{font-size:10.5px;color:var(--cinza-400);text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+  .cal h3 .sic{background:var(--laranja-100)}
+  .cal .comp-lbl{font-family:'Sora',sans-serif;font-weight:800;color:var(--roxo-900);font-size:15px}
+  .cal .nota{font-size:11.5px;color:var(--cinza-400);margin-bottom:14px}
+  .cal-week{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:10px;margin-bottom:7px;background:#FDFCFF;border:1px solid var(--linha);transition:all .15s}
+  .cal-week .wk{font-weight:700;font-size:13px;color:var(--roxo-900)}
+  .cal-week .wk small{display:block;color:var(--cinza-400);font-weight:500;font-size:11px;margin-top:1px}
+  .badge-par,.badge-impar{font-family:'Sora',sans-serif;font-size:11px;font-weight:800;padding:5px 13px;border-radius:999px;letter-spacing:.03em}
+  .badge-par{background:var(--roxo-100);color:var(--roxo-700)}
+  .badge-impar{background:var(--laranja-100);color:var(--laranja-600)}
+  .cal-ref{font-size:11.5px;color:var(--cinza-700);background:var(--verde-bg);border-radius:10px;padding:11px 13px;margin-top:10px;line-height:1.55}
+  .cal-ref b{color:var(--verde)}
+
+  /* ---------- Toast ---------- */
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--roxo-900);color:#fff;font-size:13.5px;font-weight:600;padding:13px 22px;border-radius:12px;box-shadow:var(--sombra-lg);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:60;display:flex;align-items:center;gap:10px}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast b{color:#FFB273}
+
+  @media(max-width:640px){
+    .barra-row{grid-template-columns:96px 1fr 46px}
+    .atualiz{text-align:left}
+  }
+  @media(max-width:560px){
+    .horario-row{grid-template-columns:1fr 1fr;grid-auto-rows:auto}
+    .horario-row .turno-lbl{grid-column:1/-1}
+    .horario-row .sep{display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== BARRA SUPERIOR ===================== -->
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <div class="logo">🎓</div>
+      <div>
+        <h1>Sistema de Gestão de Estágios</h1>
+        <div class="tag">Belo Horizonte</div>
+      </div>
+    </div>
+    <nav class="nav" id="tabs">
+      <button data-tab="dashboard" class="on">Dashboard</button>
+      <button data-tab="campos">Campos de Estágio</button>
+      <button data-tab="alocacao">Alocação de Campos</button>
+    </nav>
+    <div class="topbar-right" id="compBox">
+      <div class="comp">
+        <label for="selMes">Competência</label>
+        <select id="selMes"></select>
+      </div>
+      <div class="atualiz">Última atualização<br><b id="ultimaAtualiz">—</b></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ==================================================================== -->
+  <!-- ===================== ABA 1 · DASHBOARD ============================ -->
+  <!-- ==================================================================== -->
+  <div id="viewDashboard">
+    <div class="cards" id="cards"></div>
+
+    <section class="painel">
+      <h2>Distribuição das Vagas</h2>
+      <p class="dica">Vagas ocupadas por unidade na competência selecionada.</p>
+      <div class="barras" id="barras"></div>
+    </section>
+
+    <section class="painel">
+      <h2>Mapa dos Campos</h2>
+      <p class="dica">Visão consolidada dos campos compartilhados. Clique em uma linha para ver os detalhes.</p>
+      <div class="ferramentas">
+        <div class="busca"><input type="text" id="dBusca" placeholder="Pesquisar por campo…"></div>
+        <select id="fUnidade"><option value="">Todas as unidades</option></select>
+        <select id="fPrec">
+          <option value="">Preceptor: todos</option>
+          <option value="sim">Preceptor: Sim</option>
+          <option value="nao">Preceptor: Não</option>
+        </select>
+        <select id="dStatus">
+          <option value="">Status: todos</option>
+          <option value="disp">🟢 Disponível</option>
+          <option value="quase">🟡 Quase lotado</option>
+          <option value="lot">🔴 Lotado</option>
+        </select>
+        <button class="btn-limpar" id="dLimpar">Limpar filtros</button>
+      </div>
+      <div class="tab-scroll">
+        <table id="dTable">
+          <thead>
+            <tr>
+              <th data-col="campo">Campo <span class="arrow">▲▼</span></th>
+              <th data-col="par">Unidade (PAR) <span class="arrow">▲▼</span></th>
+              <th data-col="impar">Unidade (ÍMPAR) <span class="arrow">▲▼</span></th>
+              <th data-col="mes">Mês de Referência <span class="arrow">▲▼</span></th>
+              <th data-col="ocup">Ocupação <span class="arrow">▲▼</span></th>
+              <th data-col="prec" class="center">Preceptor <span class="arrow">▲▼</span></th>
+              <th data-col="status">Status <span class="arrow">▲▼</span></th>
+            </tr>
+          </thead>
+          <tbody id="dTbody"></tbody>
+        </table>
+      </div>
+      <div class="legenda-status">
+        <span><span class="dot v"></span> Disponível — ainda há vagas livres</span>
+        <span><span class="dot a"></span> Quase lotado — ocupação acima de 90%</span>
+        <span><span class="dot r"></span> Lotado — 100% das vagas ocupadas</span>
+      </div>
+      <div class="pag">
+        <div class="pag-info" id="dPagInfo"></div>
+        <div class="pag-btns" id="dPagBtns"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- ===================== ABA 2 · CAMPOS DE ESTÁGIO ==================== -->
+  <!-- ==================================================================== -->
+  <div id="viewCampos" class="hidden">
+
+    <!-- LISTA -->
+    <div id="viewLista">
+      <section class="painel">
+        <div class="painel-head">
+          <h2>Campos de Estágio</h2>
+          <button class="btn btn-primary" id="btnNovo">＋ Novo Campo</button>
+        </div>
+        <p class="dica">Cadastro central de todos os campos: capacidade, regras de utilização, financeiro e documentação.</p>
+        <div class="ferramentas">
+          <div class="busca"><input type="text" id="busca" placeholder="Pesquisar por campo…"></div>
+          <select id="fCurso">
+            <option value="">Curso: todos</option>
+            <option value="enfermagem">Enfermagem</option>
+            <option value="radiologia">Radiologia</option>
+            <option value="ambos">Ambos</option>
+          </select>
+          <select id="fCidade"><option value="">Cidade: todas</option></select>
+          <select id="fStatus">
+            <option value="">Status: todos</option>
+            <option value="ativo">🟢 Ativo</option>
+            <option value="inativo">⚪ Inativo</option>
+          </select>
+          <select id="fUtil">
+            <option value="">Utilização: todas</option>
+            <option value="alt">Alternado (PAR/ÍMPAR)</option>
+            <option value="nao">Não alternado</option>
+          </select>
+          <button class="btn-limpar" id="btnLimpar">Limpar filtros</button>
+        </div>
+        <div class="tab-scroll">
+          <table id="cTable">
+            <thead>
+              <tr>
+                <th data-col="nome">Campo <span class="arrow">▲▼</span></th>
+                <th data-col="endereco">Endereço <span class="arrow">▲▼</span></th>
+                <th data-col="curso">Curso <span class="arrow">▲▼</span></th>
+                <th data-col="vagas" class="center">Vagas <span class="arrow">▲▼</span></th>
+                <th data-col="turnos">Turnos <span class="arrow">▲▼</span></th>
+                <th data-col="alternado" class="center">Alternados <span class="arrow">▲▼</span></th>
+                <th data-col="status">Status <span class="arrow">▲▼</span></th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="pag">
+          <div class="pag-info" id="pagInfo"></div>
+          <div class="pag-btns" id="pagBtns"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- CADASTRO -->
+    <div id="viewForm" class="hidden">
+      <div class="form-top">
+        <button class="btn-voltar" id="btnVoltar">← Voltar</button>
+        <div class="form-title" id="formTitulo">Novo Campo</div>
+      </div>
+
+      <section class="secao">
+        <h3><span class="sic">🏥</span> Informações Gerais</h3>
+        <div class="grid">
+          <div class="campo-form full"><label class="lab">Nome do campo</label><input type="text" id="fNome" placeholder="Ex.: Hospital João XXIII"></div>
+          <div class="campo-form full"><label class="lab">Endereço</label><input type="text" id="fEndereco" placeholder="Rua, número, bairro"></div>
+          <div class="campo-form"><label class="lab">Cidade</label><input type="text" id="fCidadeForm" placeholder="Ex.: Belo Horizonte"></div>
+          <div class="campo-form full"><label class="lab">Contatos</label>
+            <div id="contatos"></div>
+            <button type="button" class="btn btn-ghost" id="btnAddContato" style="margin-top:4px;align-self:flex-start">＋ Adicionar contato</button>
+          </div>
+          <div class="campo-form"><label class="lab">Curso</label>
+            <div class="seg" id="segCurso">
+              <button type="button" data-v="enfermagem" class="on">Enfermagem</button>
+              <button type="button" data-v="radiologia">Radiologia</button>
+              <button type="button" data-v="ambos">Ambos</button>
+            </div>
+          </div>
+          <div class="campo-form"><label class="lab">Status</label>
+            <div class="seg" id="segStatus">
+              <button type="button" data-v="ativo" class="on">🟢 Ativo</button>
+              <button type="button" data-v="inativo">⚪ Inativo</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="secao">
+        <h3><span class="sic">🪑</span> Capacidade e Utilização</h3>
+        <div class="grid">
+          <div class="campo-form full"><label class="lab">Vagas por período</label>
+            <div class="vagas-grid">
+              <div class="vg"><span>🌅 Manhã</span><input type="number" id="vagM" min="0" placeholder="0"></div>
+              <div class="vg"><span>☀️ Tarde</span><input type="number" id="vagT" min="0" placeholder="0"></div>
+              <div class="vg"><span>🌙 Noite</span><input type="number" id="vagN" min="0" placeholder="0"></div>
+              <div class="vg"><span>📅 Sábado</span><input type="number" id="vagS" min="0" placeholder="0"></div>
+              <div class="vg"><span>📅 Domingo</span><input type="number" id="vagD" min="0" placeholder="0"></div>
+              <div class="vg total"><span>Total</span><b id="vagTotal">0</b></div>
+            </div>
+            <span class="hint">Informe quantas vagas o campo oferece em cada período. Os períodos com vaga aparecem automaticamente nos horários e na alocação.</span>
+          </div>
+          <div class="campo-form"><label class="lab">Tipo de utilização</label>
+            <div class="seg laranja" id="segAlt">
+              <button type="button" data-v="1">Alternado (PAR/ÍMPAR)</button>
+              <button type="button" data-v="0" class="on">Todos os dias</button>
+            </div>
+            <span class="hint" id="hintAlt">Todos os dias: apenas uma unidade ocupa cada vaga.</span>
+          </div>
+          <div class="campo-form"><label class="lab">Compartilhado entre unidades</label>
+            <div class="seg laranja" id="segComp">
+              <button type="button" data-v="1">Sim</button>
+              <button type="button" data-v="0" class="on">Não</button>
+            </div>
+            <span class="hint">Duas unidades podem dividir o mesmo campo (com ou sem alternância).</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="secao">
+        <h3><span class="sic">👩‍🏫</span> Tipo de Campo</h3>
+        <div class="grid">
+          <div class="campo-form"><label class="lab">Preceptoria</label>
+            <div class="seg" id="segPrec">
+              <button type="button" data-v="1" class="on">Com preceptor</button>
+              <button type="button" data-v="0">Sem preceptor</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="secao">
+        <h3><span class="sic">💰</span> Financeiro</h3>
+        <div class="grid">
+          <div class="campo-form full"><label class="lab">Tipo de contrapartida</label>
+            <div class="seg" id="segContra">
+              <button type="button" data-v="hora">Hora-aula</button>
+              <button type="button" data-v="mensal" class="on">Valor mensal</button>
+              <button type="button" data-v="fixo">Valor fixo</button>
+              <button type="button" data-v="edc">Pagamento por EDC</button>
+              <button type="button" data-v="sem">Sem contrapartida</button>
+            </div>
+          </div>
+          <div class="campo-form cond" id="wrapValor"><label class="lab" id="labValor">Valor mensal (R$)</label>
+            <input type="number" id="fValor" min="0" step="0.01" placeholder="0,00">
+          </div>
+        </div>
+      </section>
+
+      <section class="secao">
+        <h3><span class="sic">📄</span> Documentação Exigida</h3>
+        <div class="chk-grid" id="chkDocs">
+          <label class="chk"><input type="checkbox" value="Vacinação"> Vacinação</label>
+          <label class="chk"><input type="checkbox" value="Seguro"> Seguro</label>
+          <label class="chk"><input type="checkbox" value="ASO"> ASO</label>
+          <label class="chk"><input type="checkbox" value="Termo de Compromisso"> Termo de Compromisso</label>
+          <label class="chk"><input type="checkbox" value="Carta de Apresentação"> Carta de Apresentação</label>
+        </div>
+        <div class="doc-custom">
+          <input type="text" id="fDocNovo" placeholder="Adicionar documento personalizado…">
+          <button type="button" class="btn btn-ghost" id="btnAddDoc">＋ Adicionar</button>
+        </div>
+        <div class="chips" id="chipsDocs"></div>
+      </section>
+
+      <section class="secao">
+        <h3><span class="sic">🕐</span> Horário de Funcionamento</h3>
+        <p class="dica" style="margin-bottom:10px">Referência para a montagem das escalas. Aparecem apenas os turnos marcados em Capacidade.</p>
+        <div id="horarios"></div>
+      </section>
+
+      <section class="secao">
+        <h3><span class="sic">📝</span> Observações</h3>
+        <div class="campo-form full">
+          <textarea id="fObs" placeholder="Ex.: Não recebe alunos às sextas-feiras. Obrigatório uso de jaleco. Entrada pela portaria lateral."></textarea>
+        </div>
+      </section>
+
+      <div class="barra-acoes">
+        <div class="esq">
+          <button class="btn btn-ghost" id="btnDuplicar">⧉ Duplicar Campo</button>
+          <button class="btn btn-ghost" id="btnInativar">⊘ Inativar Campo</button>
+          <button class="btn btn-perigo" id="btnExcluir">🗑 Excluir</button>
+        </div>
+        <button class="btn btn-ghost" id="btnSalvarNovo">Salvar e Novo</button>
+        <button class="btn btn-roxo" id="btnSalvar">Salvar</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================================================================== -->
+  <!-- ===================== ABA 3 · ALOCAÇÃO DE CAMPOS =================== -->
+  <!-- ==================================================================== -->
+  <div id="viewAlocacao" class="hidden">
+
+    <!-- LISTA -->
+    <div id="alocLista">
+      <section class="painel">
+        <div class="painel-head">
+          <h2>Alocação de Campos</h2>
+          <button class="btn btn-primary" id="btnNovaAloc">＋ Nova Alocação</button>
+        </div>
+        <p class="dica">Distribuição das turmas nos campos, com controle automático de alternância PAR/ÍMPAR entre as semanas.</p>
+        <div class="ferramentas">
+          <div class="busca"><input type="text" id="aBusca" placeholder="Pesquisar por campo…"></div>
+          <select id="aComp"></select>
+          <select id="aUnidade"><option value="">Unidade: todas</option></select>
+          <select id="aCurso"><option value="">Curso: todos</option><option value="enfermagem">Enfermagem</option><option value="radiologia">Radiologia</option></select>
+          <select id="aCampo"><option value="">Campo: todos</option></select>
+          <select id="aCidade"><option value="">Cidade: todas</option></select>
+          <select id="aTurno"><option value="">Turno: todos</option><option value="M">Manhã</option><option value="T">Tarde</option><option value="N">Noite</option></select>
+          <select id="aModelo"><option value="">Modelo: todos</option><option value="semana_todos">Todos os dias</option><option value="semana_3x2">3×2</option><option value="fds_sabdom">Sáb e Dom</option><option value="fds_sab">Só Sábado</option><option value="fds_dom">Só Domingo</option></select>
+          <button class="btn-limpar" id="aLimpar">Limpar filtros</button>
+        </div>
+        <div class="tab-scroll">
+          <table id="aTable">
+            <thead>
+              <tr>
+                <th data-col="campo">Campo <span class="arrow">▲▼</span></th>
+                <th data-col="unidade">Unidade <span class="arrow">▲▼</span></th>
+                <th data-col="turma">Turma <span class="arrow">▲▼</span></th>
+                <th data-col="comp">Competência <span class="arrow">▲▼</span></th>
+                <th data-col="modelo">Modelo <span class="arrow">▲▼</span></th>
+                <th data-col="turno" class="center">Turno <span class="arrow">▲▼</span></th>
+                <th data-col="alunos" class="center">Alunos <span class="arrow">▲▼</span></th>
+                <th data-col="ocup">Ocupação <span class="arrow">▲▼</span></th>
+                <th data-col="status">Status <span class="arrow">▲▼</span></th>
+              </tr>
+            </thead>
+            <tbody id="aTbody"></tbody>
+          </table>
+        </div>
+        <div class="pag">
+          <div class="pag-info" id="aPagInfo"></div>
+          <div class="pag-btns" id="aPagBtns"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- CADASTRO -->
+    <div id="alocForm" class="hidden">
+      <div class="form-top">
+        <button class="btn-voltar" id="aVoltar">← Voltar</button>
+        <div class="form-title" id="aFormTitulo">Nova Alocação</div>
+      </div>
+      <div class="aloc-grid">
+        <div>
+          <section class="secao">
+            <h3><span class="sic">🎯</span> Dados da Alocação</h3>
+            <div class="grid">
+              <div class="campo-form"><label class="lab">Competência</label><select id="afComp"></select></div>
+              <div class="campo-form"><label class="lab">Campo</label><select id="afCampo"><option value="">Selecione…</option></select></div>
+            </div>
+            <div class="info-box" id="afCampoInfo"></div>
+            <div class="grid" style="margin-top:16px">
+              <div class="campo-form"><label class="lab">Unidade</label><select id="afUnidade"><option value="">Selecione…</option></select></div>
+              <div class="campo-form"><label class="lab">Turma</label><input type="text" id="afTurma" placeholder="Ex.: 251, M252, Turma A…"></div>
+              <div class="campo-form"><label class="lab">Curso</label>
+                <div class="seg" id="afCurso"><button type="button" data-v="enfermagem" class="on">Enfermagem</button><button type="button" data-v="radiologia">Radiologia</button></div>
+              </div>
+              <div class="campo-form"><label class="lab">Alunos alocados</label><input type="number" id="afAlunos" min="0" placeholder="0"></div>
+            </div>
+            <div class="grid" style="margin-top:16px">
+              <div class="campo-form"><label class="lab">Data inicial</label><input type="date" id="afDataIni"></div>
+              <div class="campo-form"><label class="lab">Data final</label><input type="date" id="afDataFim"></div>
+            </div>
+          </section>
+
+          <section class="secao">
+            <h3><span class="sic">📅</span> Frequência do Estágio</h3>
+            <div class="grid">
+              <div class="campo-form"><label class="lab">Tipo de estágio</label>
+                <div class="seg" id="afTipo"><button type="button" data-v="semana" class="on">Durante a semana</button><button type="button" data-v="fds">Final de semana</button></div>
+              </div>
+            </div>
+            <div class="cond" id="wrapSemModelo" style="margin-top:16px">
+              <label class="lab">Modelo (durante a semana)</label><br>
+              <div class="seg" id="afSemModelo" style="margin-top:6px"><button type="button" data-v="semana_todos" class="on">Todos os dias (seg–sex)</button><button type="button" data-v="semana_3x2">Modelo 3×2</button></div>
+            </div>
+            <div class="cond" id="wrapSemana" style="margin-top:16px">
+              <label class="lab">Semana (alternância 3×2)</label><br>
+              <div class="seg laranja" id="afSemana" style="margin-top:6px"><button type="button" data-v="par" class="on">Semana PAR</button><button type="button" data-v="impar">Semana ÍMPAR</button></div>
+              <span class="hint">A alternância entre as semanas é recalculada automaticamente a cada competência.</span>
+            </div>
+            <div class="cond" id="wrapFds" style="margin-top:16px">
+              <label class="lab">Dias (final de semana)</label><br>
+              <div class="seg" id="afFds" style="margin-top:6px"><button type="button" data-v="fds_sabdom" class="on">Sábado e Domingo</button><button type="button" data-v="fds_sab">Apenas Sábado</button><button type="button" data-v="fds_dom">Apenas Domingo</button></div>
+            </div>
+            <div class="campo-form full" style="margin-top:16px"><label class="lab">Turno &nbsp;<span class="hint" id="turnoHint"></span></label>
+              <div class="seg laranja" id="afTurno">
+                <button type="button" data-v="M" class="on">Manhã<i class="ocp" data-t="M"></i></button>
+                <button type="button" data-v="T">Tarde<i class="ocp" data-t="T"></i></button>
+                <button type="button" data-v="N">Noite<i class="ocp" data-t="N"></i></button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div>
+          <section class="secao cal">
+            <h3><span class="sic">🗓️</span> Calendário de Referência</h3>
+            <div id="afCal"></div>
+          </section>
+        </div>
+      </div>
+
+      <div class="barra-acoes">
+        <button class="btn btn-ghost" id="aSalvarNova">Salvar e Nova</button>
+        <button class="btn btn-roxo" id="aSalvar">Salvar Alocação</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+//  TOAST + NAVEGAÇÃO ENTRE ABAS (global)
+// ============================================================
+let toastTimer;
+function mostrarToast(html){
+  const t=document.getElementById("toast");
+  t.innerHTML="ℹ️ "+html; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),3000);
+}
+(function(){
+  const tabs=document.getElementById("tabs");
+  const compBox=document.getElementById("compBox");
+  function setTab(t){
+    tabs.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.tab===t));
+    document.getElementById("viewDashboard").classList.toggle("hidden",t!=="dashboard");
+    document.getElementById("viewCampos").classList.toggle("hidden",t!=="campos");
+    document.getElementById("viewAlocacao").classList.toggle("hidden",t!=="alocacao");
+    compBox.style.display = t==="dashboard" ? "" : "none";
+    if(t==="dashboard" && window.dashRerender) window.dashRerender();
+    if(t==="campos" && window.camposShowList) window.camposShowList();
+    if(t==="alocacao" && window.alocShowList) window.alocShowList();
+    window.scrollTo({top:0,behavior:"instant"});
+  }
+  tabs.addEventListener("click",e=>{ const b=e.target.closest("button"); if(b) setTab(b.dataset.tab); });
+})();
+
+// ============================================================
+//  ABA 1 · DASHBOARD
+// ============================================================
+(function(){
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const UNIDADES=["BH Centro","Venda Nova","Contagem"];
+const CAMPOS=[
+  {campo:"Hospital João XXIII",             a:"BH Centro",  b:"Venda Nova", vagas:80, prec:true},
+  {campo:"Hospital Regional",               a:"Contagem",   b:"BH Centro",  vagas:60, prec:false},
+  {campo:"Santa Casa de Belo Horizonte",    a:"Venda Nova", b:"Contagem",   vagas:90, prec:true},
+  {campo:"Hospital das Clínicas — UFMG",    a:"BH Centro",  b:"Contagem",   vagas:96, prec:true},
+  {campo:"Hospital Odilon Behrens",         a:"BH Centro",  b:"Venda Nova", vagas:64, prec:true},
+  {campo:"Hospital Risoleta Tolentino Neves",a:"Venda Nova", b:"BH Centro",  vagas:54, prec:false},
+  {campo:"Hospital Municipal de Contagem",  a:"Contagem",   b:"Venda Nova", vagas:72, prec:true},
+  {campo:"Hospital Júlia Kubitschek",       a:"BH Centro",  b:"Contagem",   vagas:48, prec:true},
+  {campo:"Maternidade Odete Valadares",     a:"Venda Nova", b:"Contagem",   vagas:36, prec:false},
+  {campo:"Hospital Eduardo de Menezes",     a:"Contagem",   b:"BH Centro",  vagas:42, prec:false},
+  {campo:"UPA Venda Nova",                  a:"Venda Nova", b:"BH Centro",  vagas:30, prec:false},
+  {campo:"Hospital Sofia Feldman",          a:"BH Centro",  b:"Venda Nova", vagas:28, prec:true},
+];
+const MESES=[
+  {v:"2026-06", nome:"Junho / 2026"},{v:"2026-07", nome:"Julho / 2026"},{v:"2026-08", nome:"Agosto / 2026"},
+  {v:"2026-09", nome:"Setembro / 2026"},{v:"2026-10", nome:"Outubro / 2026"},{v:"2026-11", nome:"Novembro / 2026"},
+  {v:"2026-12", nome:"Dezembro / 2026"},
+];
+function ocupacaoDe(idx, mesV, vagas){
+  const m=parseInt(mesV.split("-")[1],10);
+  const s=Math.sin((idx+1)*12.9898+m*78.233)*43758.5453;
+  let frac=s-Math.floor(s); frac=0.45+frac*0.6; if(frac>1) frac=1;
+  return Math.round(vagas*frac);
+}
+function parImpar(campo, mesV){
+  const m=parseInt(mesV.split("-")[1],10);
+  return (m%2===0)?{par:campo.a,impar:campo.b}:{par:campo.b,impar:campo.a};
+}
+let mesAtual="2026-08", ordenarPor="ocup", ordemAsc=false, pagina=1;
+const PAG_TAM=8;
+
+$("#selMes").innerHTML=MESES.map(m=>`<option value="${m.v}">${m.nome}</option>`).join("");
+$("#selMes").value=mesAtual;
+$("#fUnidade").innerHTML=`<option value="">Todas as unidades</option>`+UNIDADES.map(u=>`<option value="${u}">${u}</option>`).join("");
+$("#ultimaAtualiz").textContent="04/08/2026 · 14:35";
+
+function statusDe(pct){
+  if(pct>=100) return {cls:"lot",cor:"r",txt:"🔴 Lotado"};
+  if(pct>=90)  return {cls:"quase",cor:"a",txt:"🟡 Quase lotado"};
+  return {cls:"disp",cor:"v",txt:"🟢 Disponível"};
+}
+function nomeMes(v){ return (MESES.find(m=>m.v===v)||{}).nome||v; }
+function nomeMesCurto(v){ return nomeMes(v).split(" / ")[0]; }
+
+function linhasDoMes(){
+  return CAMPOS.map((c,idx)=>{
+    const ocup=ocupacaoDe(idx,mesAtual,c.vagas);
+    const pct=Math.round(ocup/c.vagas*100);
+    const pi=parImpar(c,mesAtual);
+    return {idx,campo:c.campo,par:pi.par,impar:pi.impar,vagas:c.vagas,ocup,livre:c.vagas-ocup,pct,prec:c.prec,status:statusDe(pct),mes:nomeMesCurto(mesAtual)};
+  });
+}
+function renderCards(linhas){
+  const totalCampos=linhas.length;
+  const vagasTotais=linhas.reduce((s,l)=>s+l.vagas,0);
+  const vagasOcup=linhas.reduce((s,l)=>s+l.ocup,0);
+  const vagasLivres=vagasTotais-vagasOcup;
+  const unis=new Set(); linhas.forEach(l=>{ if(l.ocup>0){unis.add(l.par);unis.add(l.impar);} });
+  const cards=[
+    {ic:"🏥",tit:"Campos de Estágio",num:totalCampos,desc:"Campos cadastrados",cls:""},
+    {ic:"🏫",tit:"Unidades c/ Campos",num:unis.size,desc:"Unidades com alunos alocados",cls:""},
+    {ic:"👨‍🎓",tit:"Alunos em Estágio",num:vagasOcup,desc:"Total de alunos alocados",cls:"laranja"},
+    {ic:"🪑",tit:"Vagas Totais",num:vagasTotais,desc:"Capacidade somada dos campos",cls:""},
+    {ic:"✅",tit:"Vagas Ocupadas",num:vagasOcup,desc:"Vagas em utilização",cls:"laranja"},
+    {ic:"🟢",tit:"Vagas Livres",num:vagasLivres,desc:"Ainda disponíveis",cls:"verde"},
+  ];
+  $("#cards").innerHTML=cards.map(c=>`<div class="card ${c.cls}"><div class="ic">${c.ic}</div><div class="tit">${c.tit}</div><div class="num">${c.num}</div><div class="desc">${c.desc}</div></div>`).join("");
+}
+function renderBarras(linhas){
+  const porUni={}; UNIDADES.forEach(u=>porUni[u]=0);
+  let totalVagas=0,totalOcup=0;
+  linhas.forEach(l=>{ porUni[l.par]+=l.ocup/2; porUni[l.impar]+=l.ocup/2; totalVagas+=l.vagas; totalOcup+=l.ocup; });
+  const livres=totalVagas-totalOcup;
+  let itens=Object.entries(porUni).map(([nome,v])=>({nome,v:Math.round(v)})).filter(i=>i.v>0).sort((a,b)=>b.v-a.v);
+  itens.push({nome:"Livres",v:livres,livres:true});
+  const max=Math.max(...itens.map(i=>i.v),1);
+  $("#barras").innerHTML=itens.map(i=>`<div class="barra-row ${i.livres?"livres":""}"><div class="barra-nome" title="${i.nome}">${i.nome}</div><div class="barra-track"><div class="barra-fill" data-w="${(i.v/max*100).toFixed(1)}"></div></div><div class="barra-val">${i.v}</div></div>`).join("");
+  requestAnimationFrame(()=>{ $$("#barras .barra-fill").forEach(b=>b.style.width=b.dataset.w+"%"); });
+}
+function filtrarOrdenar(linhas){
+  const q=$("#dBusca").value.trim().toLowerCase();
+  const fu=$("#fUnidade").value, fp=$("#fPrec").value, fs=$("#dStatus").value;
+  let arr=linhas.filter(l=>{
+    if(q && !l.campo.toLowerCase().includes(q)) return false;
+    if(fu && l.par!==fu && l.impar!==fu) return false;
+    if(fp==="sim" && !l.prec) return false;
+    if(fp==="nao" && l.prec) return false;
+    if(fs && l.status.cls!==fs) return false;
+    return true;
+  });
+  const dir=ordemAsc?1:-1;
+  const key={campo:l=>l.campo,par:l=>l.par,impar:l=>l.impar,mes:l=>l.mes,ocup:l=>l.pct,prec:l=>(l.prec?1:0),status:l=>({disp:0,quase:1,lot:2}[l.status.cls])}[ordenarPor];
+  arr.sort((a,b)=>{const va=key(a),vb=key(b);return typeof va==="string"?va.localeCompare(vb,"pt-BR")*dir:(va-vb)*dir;});
+  return arr;
+}
+function renderTabela(linhas){
+  const arr=filtrarOrdenar(linhas);
+  const totalPag=Math.max(1,Math.ceil(arr.length/PAG_TAM));
+  if(pagina>totalPag) pagina=totalPag;
+  const inicio=(pagina-1)*PAG_TAM;
+  const itens=arr.slice(inicio,inicio+PAG_TAM);
+  if(!itens.length){
+    $("#dTbody").innerHTML=`<tr><td colspan="7" class="vazio">Nenhum campo encontrado com os filtros atuais.</td></tr>`;
+  }else{
+    $("#dTbody").innerHTML=itens.map(l=>`<tr data-idx="${l.idx}">
+        <td><span class="campo-nome">${l.campo}</span></td>
+        <td><span class="uni-badge">${l.par}</span></td>
+        <td><span class="uni-badge impar">${l.impar}</span></td>
+        <td><span class="mes-ref">${l.mes}</span></td>
+        <td class="ocup-cell"><div class="ocup-top"><span class="ocup-pct" style="color:var(--${l.status.cor==='v'?'verde':l.status.cor==='a'?'amarelo':'vermelho'})">${l.pct}%</span><span class="ocup-frac">${l.ocup}/${l.vagas}</span></div><div class="ocup-bar"><div class="ocup-in ${l.status.cor}" data-w="${Math.min(l.pct,100)}"></div></div></td>
+        <td class="center"><span class="prec ${l.prec?'sim':'nao'}">${l.prec?'Sim':'Não'}</span></td>
+        <td><span class="status ${l.status.cls}">${l.status.txt}</span></td>
+      </tr>`).join("");
+    requestAnimationFrame(()=>{ $$("#dTbody .ocup-in").forEach(b=>b.style.width=b.dataset.w+"%"); });
+  }
+  $$("#dTable thead th").forEach(th=>{
+    const on=th.dataset.col===ordenarPor; th.classList.toggle("sorted",on);
+    const a=th.querySelector(".arrow"); if(a) a.textContent=on?(ordemAsc?"▲":"▼"):"▲▼";
+  });
+  $("#dPagInfo").textContent=arr.length?`Mostrando ${inicio+1}–${Math.min(inicio+PAG_TAM,arr.length)} de ${arr.length} campos`:"Nenhum campo";
+  let b=`<button data-p="prev" ${pagina===1?"disabled":""}>‹</button>`;
+  for(let p=1;p<=totalPag;p++) b+=`<button data-p="${p}" class="${p===pagina?'on':''}">${p}</button>`;
+  b+=`<button data-p="next" ${pagina===totalPag?"disabled":""}>›</button>`;
+  $("#dPagBtns").innerHTML=b;
+}
+function render(){ const linhas=linhasDoMes(); renderCards(linhas); renderBarras(linhas); renderTabela(linhas); }
+
+$("#selMes").addEventListener("change",e=>{ mesAtual=e.target.value; pagina=1; render(); });
+$("#dBusca").addEventListener("input",()=>{ pagina=1; renderTabela(linhasDoMes()); });
+$("#fUnidade").addEventListener("change",()=>{ pagina=1; renderTabela(linhasDoMes()); });
+$("#fPrec").addEventListener("change",()=>{ pagina=1; renderTabela(linhasDoMes()); });
+$("#dStatus").addEventListener("change",()=>{ pagina=1; renderTabela(linhasDoMes()); });
+$("#dLimpar").addEventListener("click",()=>{ $("#dBusca").value=""; $("#fUnidade").value=""; $("#fPrec").value=""; $("#dStatus").value=""; pagina=1; renderTabela(linhasDoMes()); });
+$$("#dTable thead th").forEach(th=>th.addEventListener("click",()=>{
+  const col=th.dataset.col; if(ordenarPor===col) ordemAsc=!ordemAsc; else {ordenarPor=col;ordemAsc=true;} renderTabela(linhasDoMes());
+}));
+$("#dPagBtns").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return; const p=b.dataset.p;
+  if(p==="prev") pagina=Math.max(1,pagina-1); else if(p==="next") pagina++; else pagina=parseInt(p,10);
+  renderTabela(linhasDoMes());
+});
+$("#dTbody").addEventListener("click",e=>{
+  const tr=e.target.closest("tr[data-idx]"); if(!tr) return;
+  const l=linhasDoMes()[+tr.dataset.idx];
+  mostrarToast(`Detalhes de <b>${l.campo}</b> — disponível na próxima etapa do sistema.`);
+});
+window.dashRerender=render;
+render();
+})();
+
+// ============================================================
+//  ABA 2 · CAMPOS DE ESTÁGIO
+// ============================================================
+(function(){
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+window.DB=window.DB||{};
+DB.unidades=DB.unidades||["BH Centro","Venda Nova","Contagem"];
+const CAMPOS=DB.campos=[
+  {id:1, nome:"Hospital João XXIII", endereco:"Av. Prof. Alfredo Balena, 400 - Santa Efigênia", cidade:"Belo Horizonte", contato:"Ana Martins", telefone:"(31) 3239-9000", email:"estagio@joaoxxiii.mg.gov.br", curso:"ambos", status:"ativo", vagas:80, turnos:{M:true,T:true,N:true}, alternado:true, compartilhado:true, preceptor:true, relacao:"8:1", contra:"mensal", valor:2500, docs:["Vacinação","Seguro","ASO","Termo de Compromisso"], horarios:{M:["07:00","13:00"],T:["13:00","19:00"],N:["19:00","22:00"]}, obs:"Entrada pela portaria lateral. Obrigatório uso de jaleco.", utilizado:true},
+  {id:2, nome:"Hospital Regional", endereco:"Rua Domingos Vieira, 300 - Santa Efigênia", cidade:"Belo Horizonte", contato:"Carlos Souza", telefone:"(31) 3333-1000", email:"contato@regional.mg", curso:"enfermagem", status:"ativo", vagas:60, turnos:{M:true,T:true,N:false}, alternado:true, compartilhado:true, preceptor:false, relacao:"", contra:"hora", valor:75, docs:["Vacinação","Seguro"], horarios:{M:["07:00","13:00"],T:["13:00","19:00"]}, obs:"", utilizado:true},
+  {id:3, nome:"Santa Casa de Belo Horizonte", endereco:"Av. Francisco Sales, 1111 - Santa Efigênia", cidade:"Belo Horizonte", contato:"Marina Reis", telefone:"(31) 3238-8000", email:"ensino@santacasabh.org.br", curso:"ambos", status:"ativo", vagas:90, turnos:{M:true,T:true,N:true}, alternado:true, compartilhado:true, preceptor:true, relacao:"6:1", contra:"mensal", valor:3200, docs:["Vacinação","Seguro","ASO","Termo de Compromisso","Carta de Apresentação"], horarios:{M:["07:00","13:00"],T:["13:00","19:00"],N:["19:00","23:00"]}, obs:"Restrição de acesso ao centro cirúrgico.", utilizado:true},
+  {id:4, nome:"Hospital das Clínicas — UFMG", endereco:"Av. Prof. Alfredo Balena, 110 - Santa Efigênia", cidade:"Belo Horizonte", contato:"Paulo Lima", telefone:"(31) 3409-9300", email:"estagios@hc.ufmg.br", curso:"ambos", status:"ativo", vagas:96, turnos:{M:true,T:true,N:true}, alternado:true, compartilhado:true, preceptor:true, relacao:"8:1", contra:"fixo", valor:12000, docs:["Vacinação","Seguro","ASO","Termo de Compromisso"], horarios:{M:["06:30","12:30"],T:["12:30","18:30"],N:["18:30","22:30"]}, obs:"", utilizado:true},
+  {id:5, nome:"Hospital Odilon Behrens", endereco:"R. Formiga, 50 - São Cristóvão", cidade:"Belo Horizonte", contato:"Juliana Alves", telefone:"(31) 3277-6100", email:"ensino@odilon.mg.gov.br", curso:"enfermagem", status:"ativo", vagas:64, turnos:{M:true,T:true,N:false}, alternado:true, compartilhado:true, preceptor:true, relacao:"10:1", contra:"mensal", valor:1800, docs:["Vacinação","Seguro","ASO"], horarios:{M:["07:00","13:00"],T:["13:00","19:00"]}, obs:"Intervalo das 12h às 13h.", utilizado:false},
+  {id:6, nome:"Hospital Risoleta Tolentino Neves", endereco:"R. das Gabirobas, 01 - Vila Cloris", cidade:"Belo Horizonte", contato:"Rafael Dias", telefone:"(31) 3459-7000", email:"estagio@hrtn.ufmg.br", curso:"radiologia", status:"ativo", vagas:54, turnos:{M:true,T:false,N:false}, alternado:false, compartilhado:false, preceptor:false, relacao:"", contra:"sem", valor:0, docs:["Vacinação","Seguro"], horarios:{M:["07:00","13:00"]}, obs:"", utilizado:false},
+  {id:7, nome:"Hospital Municipal de Contagem", endereco:"Av. General David Sarnoff, 3113 - Cidade Industrial", cidade:"Contagem", contato:"Fernanda Melo", telefone:"(31) 3391-2000", email:"ensino@contagem.mg.gov.br", curso:"ambos", status:"ativo", vagas:72, turnos:{M:true,T:true,N:true}, alternado:true, compartilhado:true, preceptor:true, relacao:"8:1", contra:"mensal", valor:2100, docs:["Vacinação","Seguro","ASO","Termo de Compromisso"], horarios:{M:["07:00","13:00"],T:["13:00","19:00"],N:["19:00","22:00"]}, obs:"", utilizado:true},
+  {id:8, nome:"Hospital Júlia Kubitschek", endereco:"Alameda Ezequiel Dias - Centro", cidade:"Belo Horizonte", contato:"Sérgio Rocha", telefone:"(31) 3389-7100", email:"estagio@fhemig.mg.gov.br", curso:"enfermagem", status:"ativo", vagas:48, turnos:{M:true,T:true,N:false}, alternado:true, compartilhado:true, preceptor:true, relacao:"6:1", contra:"mensal", valor:1600, docs:["Vacinação","Seguro","ASO"], horarios:{M:["07:00","13:00"],T:["13:00","19:00"]}, obs:"", utilizado:false},
+  {id:9, nome:"Maternidade Odete Valadares", endereco:"Av. do Contorno, 9494 - Prado", cidade:"Belo Horizonte", contato:"Beatriz Nunes", telefone:"(31) 3335-4300", email:"ensino@mov.fhemig.mg.gov.br", curso:"enfermagem", status:"inativo", vagas:36, turnos:{M:true,T:true,N:false}, alternado:false, compartilhado:true, preceptor:true, relacao:"10:1", contra:"hora", valor:60, docs:["Vacinação","Seguro"], horarios:{M:["07:00","13:00"],T:["13:00","19:00"]}, obs:"Somente alunas do último período.", utilizado:false},
+  {id:10, nome:"Hospital Eduardo de Menezes", endereco:"R. Dr. Cristiano Rezende, 2213 - Bonsucesso", cidade:"Belo Horizonte", contato:"Lucas Faria", telefone:"(31) 3328-5000", email:"estagio@hem.fhemig.mg.gov.br", curso:"radiologia", status:"ativo", vagas:42, turnos:{M:true,T:false,N:false}, alternado:false, compartilhado:false, preceptor:false, relacao:"", contra:"sem", valor:0, docs:["Vacinação"], horarios:{M:["07:00","13:00"]}, obs:"", utilizado:false},
+  {id:11, nome:"UPA Venda Nova", endereco:"Av. Vilarinho, 2000 - Venda Nova", cidade:"Belo Horizonte", contato:"Patrícia Gomes", telefone:"(31) 3277-9000", email:"upavendanova@pbh.gov.br", curso:"enfermagem", status:"ativo", vagas:30, turnos:{M:true,T:true,N:true}, alternado:true, compartilhado:true, preceptor:false, relacao:"", contra:"sem", valor:0, docs:["Vacinação","Seguro","ASO"], horarios:{M:["07:00","13:00"],T:["13:00","19:00"],N:["19:00","07:00"]}, obs:"Funcionamento 24h.", utilizado:false},
+  {id:12, nome:"Hospital Sofia Feldman", endereco:"R. Uberaba, 370 - Tupi", cidade:"Belo Horizonte", contato:"Camila Prado", telefone:"(31) 3459-3000", email:"ensino@sofiafeldman.org.br", curso:"ambos", status:"ativo", vagas:28, turnos:{M:true,T:true,N:false}, alternado:true, compartilhado:true, preceptor:true, relacao:"6:1", contra:"mensal", valor:1400, docs:["Vacinação","Seguro","ASO","Termo de Compromisso"], horarios:{M:["07:00","13:00"],T:["13:00","19:00"]}, obs:"", utilizado:false},
+];
+const CURSO_LBL={enfermagem:"Enfermagem",radiologia:"Radiologia",ambos:"Ambos"};
+const TURNO_LBL={M:"Manhã",T:"Tarde",N:"Noite",S:"Sábado",D:"Domingo"};
+const CONTRA_CAMPO={hora:"Valor da hora-aula (R$)",mensal:"Valor mensal (R$)",fixo:"Valor fixo (R$)",edc:"Valor por EDC (R$)"};
+const PERIODOS=["M","T","N","S","D"];
+function totalVagas(c){ return PERIODOS.reduce((s,k)=>s+((c.vagas&&c.vagas[k])||0),0); }
+// normaliza dados antigos (vagas número + turnos + contato único) para o novo formato
+DB.campos.forEach(c=>{
+  if(typeof c.vagas==="number"){ const t=c.turnos||{}; const av=["M","T","N"].filter(x=>t[x]); const per=av.length?Math.round(c.vagas/av.length):0; c.vagas={M:t.M?per:0,T:t.T?per:0,N:t.N?per:0,S:0,D:0}; }
+  if(c.contato!==undefined){ c.contatos=[{nome:c.contato||"",telefone:c.telefone||"",email:c.email||""}]; delete c.contato; delete c.telefone; delete c.email; }
+  delete c.relacao; delete c.turnos;
+});
+
+let ordenarPor="nome", ordemAsc=true, pagina=1;
+const PAG_TAM=8;
+let editId=null, docsCustom=[], contatos=[];
+const esc=s=>String(s==null?"":s).replace(/"/g,"&quot;");
+function renderContatos(){ document.getElementById("contatos").innerHTML=contatos.map((k,i)=>`<div class="contato-row"><input type="text" data-f="nome" placeholder="Nome do contato" value="${esc(k.nome)}"><input type="tel" data-f="telefone" placeholder="Telefone" value="${esc(k.telefone)}"><input type="email" data-f="email" placeholder="E-mail" value="${esc(k.email)}"><button type="button" class="ct-rm" data-i="${i}" title="Remover">×</button></div>`).join(""); }
+function syncContatos(){ contatos=[...document.querySelectorAll("#contatos .contato-row")].map(r=>({nome:r.querySelector('[data-f=nome]').value,telefone:r.querySelector('[data-f=telefone]').value,email:r.querySelector('[data-f=email]').value})); }
+function atualizarTotal(){ document.getElementById("vagTotal").textContent=PERIODOS.reduce((s,t)=>s+(parseInt(document.getElementById("vag"+t).value)||0),0); }
+
+function montarCidades(){
+  const cidades=[...new Set(CAMPOS.map(c=>c.cidade))].sort();
+  $("#fCidade").innerHTML=`<option value="">Cidade: todas</option>`+cidades.map(c=>`<option value="${c}">${c}</option>`).join("");
+}
+function filtrarOrdenar(){
+  const q=$("#busca").value.trim().toLowerCase();
+  const fc=$("#fCurso").value, fci=$("#fCidade").value, fs=$("#fStatus").value, fu=$("#fUtil").value;
+  let arr=CAMPOS.filter(c=>{
+    if(q && !c.nome.toLowerCase().includes(q)) return false;
+    if(fc && c.curso!==fc) return false;
+    if(fci && c.cidade!==fci) return false;
+    if(fs && c.status!==fs) return false;
+    if(fu==="alt" && !c.alternado) return false;
+    if(fu==="nao" && c.alternado) return false;
+    return true;
+  });
+  const dir=ordemAsc?1:-1;
+  const key={nome:c=>c.nome,endereco:c=>c.cidade+c.endereco,curso:c=>CURSO_LBL[c.curso],vagas:c=>totalVagas(c),turnos:c=>PERIODOS.filter(t=>c.vagas[t]>0).length,alternado:c=>c.alternado?1:0,status:c=>c.status}[ordenarPor];
+  arr.sort((a,b)=>{const va=key(a),vb=key(b);return typeof va==="string"?va.localeCompare(vb,"pt-BR")*dir:(va-vb)*dir;});
+  return arr;
+}
+function renderLista(){
+  const arr=filtrarOrdenar();
+  const totalPag=Math.max(1,Math.ceil(arr.length/PAG_TAM));
+  if(pagina>totalPag) pagina=totalPag;
+  const inicio=(pagina-1)*PAG_TAM;
+  const itens=arr.slice(inicio,inicio+PAG_TAM);
+  if(!itens.length){
+    $("#tbody").innerHTML=`<tr><td colspan="7" class="vazio">Nenhum campo encontrado com os filtros atuais.</td></tr>`;
+  }else{
+    $("#tbody").innerHTML=itens.map(c=>{
+      const turnos=PERIODOS.filter(t=>c.vagas[t]>0).map(t=>`<i title="${TURNO_LBL[t]} · ${c.vagas[t]} vaga(s)">${t}</i>`).join("");
+      return `<tr data-id="${c.id}">
+        <td><span class="campo-nome">${c.nome}</span></td>
+        <td><div class="endereco">${c.endereco}<span class="end-cidade">${c.cidade}</span></div></td>
+        <td><span class="pill curso ${c.curso==='ambos'?'ambos':''}">${CURSO_LBL[c.curso]}</span></td>
+        <td class="center"><span class="vagas-n">${totalVagas(c)}</span></td>
+        <td><div class="turnos">${turnos||'<span class="sim-nao nao">—</span>'}</div></td>
+        <td class="center"><span class="sim-nao ${c.alternado?'sim':'nao'}">${c.alternado?'Sim':'Não'}</span></td>
+        <td><span class="status ${c.status}">${c.status==='ativo'?'🟢 Ativo':'⚪ Inativo'}</span></td>
+      </tr>`;
+    }).join("");
+  }
+  $$("#cTable thead th").forEach(th=>{
+    const on=th.dataset.col===ordenarPor; th.classList.toggle("sorted",on);
+    const a=th.querySelector(".arrow"); if(a) a.textContent=on?(ordemAsc?"▲":"▼"):"▲▼";
+  });
+  $("#pagInfo").textContent=arr.length?`Mostrando ${inicio+1}–${Math.min(inicio+PAG_TAM,arr.length)} de ${arr.length} campos`:"Nenhum campo";
+  let b=`<button data-p="prev" ${pagina===1?"disabled":""}>‹</button>`;
+  for(let p=1;p<=totalPag;p++) b+=`<button data-p="${p}" class="${p===pagina?'on':''}">${p}</button>`;
+  b+=`<button data-p="next" ${pagina===totalPag?"disabled":""}>›</button>`;
+  $("#pagBtns").innerHTML=b;
+}
+function segSet(id,val){ $$("#"+id+" button").forEach(b=>b.classList.toggle("on",b.dataset.v===String(val))); }
+function segGet(id){ return ($("#"+id+" button.on")||{}).dataset?.v; }
+function atualizarCondicionais(){
+  const contra=segGet("segContra");
+  if(contra==="sem"){ $("#wrapValor").style.display="none"; }
+  else{ $("#wrapValor").style.display=""; $("#labValor").textContent=CONTRA_CAMPO[contra]; }
+  $("#hintAlt").textContent=segGet("segAlt")==="1"?"Alternado: duas unidades usam as vagas em semanas pares e ímpares.":"Todos os dias: apenas uma unidade ocupa cada vaga.";
+  renderHorarios();
+}
+function renderChips(){ $("#chipsDocs").innerHTML=docsCustom.map((d,i)=>`<span class="chip-doc">${d}<button data-rm="${i}" title="Remover">×</button></span>`).join(""); }
+function renderHorarios(){
+  const marcados=["M","T","N"].filter(t=>(parseInt($("#vag"+t).value)||0)>0);
+  if(!marcados.length){ $("#horarios").innerHTML=`<div class="horario-vazio">Marque os turnos disponíveis em "Capacidade" para definir os horários.</div>`; return; }
+  const atual=window._horTemp||{};
+  $("#horarios").innerHTML=marcados.map(t=>{
+    const h=atual[t]||["",""];
+    return `<div class="horario-row" data-t="${t}"><div class="turno-lbl"><span class="turno-tag">${t}</span> ${TURNO_LBL[t]}</div><input type="time" class="hIni" value="${h[0]}"><div class="sep">às</div><input type="time" class="hFim" value="${h[1]}"></div>`;
+  }).join("");
+}
+function coletarHorarios(){ const o={}; $$("#horarios .horario-row").forEach(r=>{ o[r.dataset.t]=[r.querySelector(".hIni").value,r.querySelector(".hFim").value]; }); return o; }
+
+function abrirForm(campo){
+  editId=campo?campo.id:null;
+  $("#formTitulo").textContent=campo?"Editar Campo":"Novo Campo";
+  const c=campo||{nome:"",endereco:"",cidade:"",contatos:[],curso:"enfermagem",status:"ativo",vagas:{M:0,T:0,N:0,S:0,D:0},alternado:false,compartilhado:false,preceptor:true,contra:"mensal",valor:"",docs:[],horarios:{},obs:""};
+  $("#fNome").value=c.nome; $("#fEndereco").value=c.endereco; $("#fCidadeForm").value=c.cidade;
+  contatos=(c.contatos&&c.contatos.length)?JSON.parse(JSON.stringify(c.contatos)):[{nome:"",telefone:"",email:""}]; renderContatos();
+  PERIODOS.forEach(t=>$("#vag"+t).value=(c.vagas&&c.vagas[t])||0); atualizarTotal();
+  $("#fValor").value=c.valor; $("#fObs").value=c.obs;
+  segSet("segCurso",c.curso); segSet("segStatus",c.status); segSet("segAlt",c.alternado?1:0); segSet("segComp",c.compartilhado?1:0);
+  segSet("segPrec",c.preceptor?1:0); segSet("segContra",c.contra);
+  const padrao=["Vacinação","Seguro","ASO","Termo de Compromisso","Carta de Apresentação"];
+  $$("#chkDocs input").forEach(el=>{ el.checked=c.docs.includes(el.value); el.closest(".chk").classList.toggle("on",el.checked); });
+  docsCustom=c.docs.filter(d=>!padrao.includes(d)); renderChips();
+  window._horTemp=JSON.parse(JSON.stringify(c.horarios||{}));
+  atualizarCondicionais();
+  const usado=campo&&campo.utilizado;
+  $("#btnExcluir").disabled=!campo||usado;
+  $("#btnExcluir").title=usado?"Não é possível excluir: o campo já foi utilizado.":"";
+  $("#btnInativar").style.display=campo?"":"none";
+  $("#btnDuplicar").style.display=campo?"":"none";
+  $("#viewLista").classList.add("hidden"); $("#viewForm").classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"instant"});
+}
+function fecharForm(){ $("#viewForm").classList.add("hidden"); $("#viewLista").classList.remove("hidden"); renderLista(); }
+function coletarForm(){
+  syncContatos();
+  const docs=[...$$("#chkDocs input")].filter(el=>el.checked).map(el=>el.value).concat(docsCustom);
+  const contra=segGet("segContra");
+  const vagas={}; PERIODOS.forEach(t=>vagas[t]=parseInt($("#vag"+t).value)||0);
+  return {
+    nome:$("#fNome").value.trim(),endereco:$("#fEndereco").value.trim(),cidade:$("#fCidadeForm").value.trim(),
+    contatos:contatos.filter(k=>k.nome||k.telefone||k.email),
+    curso:segGet("segCurso"),status:segGet("segStatus"),vagas,
+    alternado:segGet("segAlt")==="1",compartilhado:segGet("segComp")==="1",
+    preceptor:segGet("segPrec")==="1",
+    contra,valor:contra==="sem"?0:(parseFloat($("#fValor").value)||0),docs,horarios:coletarHorarios(),obs:$("#fObs").value.trim()
+  };
+}
+function salvar(novoDepois){
+  const dados=coletarForm();
+  if(!dados.nome){ mostrarToast("Informe o <b>nome do campo</b>."); return; }
+  if(editId){ const c=CAMPOS.find(x=>x.id===editId); Object.assign(c,dados); mostrarToast(`Campo <b>${dados.nome}</b> atualizado.`); }
+  else{ const id=Math.max(0,...CAMPOS.map(c=>c.id))+1; CAMPOS.push({id,...dados,utilizado:false}); mostrarToast(`Campo <b>${dados.nome}</b> cadastrado.`); }
+  montarCidades();
+  if(novoDepois){ abrirForm(null); } else { fecharForm(); }
+}
+
+$("#btnNovo").addEventListener("click",()=>abrirForm(null));
+$("#btnVoltar").addEventListener("click",fecharForm);
+$("#tbody").addEventListener("click",e=>{ const tr=e.target.closest("tr[data-id]"); if(!tr) return; abrirForm(CAMPOS.find(c=>c.id===+tr.dataset.id)); });
+$("#busca").addEventListener("input",()=>{ pagina=1; renderLista(); });
+["fCurso","fCidade","fStatus","fUtil"].forEach(id=>$("#"+id).addEventListener("change",()=>{ pagina=1; renderLista(); }));
+$("#btnLimpar").addEventListener("click",()=>{ $("#busca").value=""; ["fCurso","fCidade","fStatus","fUtil"].forEach(id=>$("#"+id).value=""); pagina=1; renderLista(); });
+$$("#cTable thead th").forEach(th=>th.addEventListener("click",()=>{ const col=th.dataset.col; if(ordenarPor===col) ordemAsc=!ordemAsc; else {ordenarPor=col;ordemAsc=true;} renderLista(); }));
+$("#pagBtns").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; const p=b.dataset.p; if(p==="prev") pagina=Math.max(1,pagina-1); else if(p==="next") pagina++; else pagina=parseInt(p,10); renderLista(); });
+["segCurso","segStatus","segAlt","segComp","segPrec","segContra"].forEach(id=>{
+  $("#"+id).addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; $$("#"+id+" button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); atualizarCondicionais(); });
+});
+PERIODOS.forEach(t=>$("#vag"+t).addEventListener("input",()=>{ atualizarTotal(); if(t==="M"||t==="T"||t==="N"){ window._horTemp=coletarHorarios(); renderHorarios(); } }));
+$("#btnAddContato").addEventListener("click",()=>{ syncContatos(); contatos.push({nome:"",telefone:"",email:""}); renderContatos(); });
+$("#contatos").addEventListener("click",e=>{ const b=e.target.closest(".ct-rm"); if(!b)return; syncContatos(); contatos.splice(+b.dataset.i,1); if(!contatos.length)contatos.push({nome:"",telefone:"",email:""}); renderContatos(); });
+$("#chkDocs").addEventListener("change",e=>{ e.target.closest(".chk").classList.toggle("on",e.target.checked); });
+function addDoc(){ const v=$("#fDocNovo").value.trim(); if(!v) return; docsCustom.push(v); $("#fDocNovo").value=""; renderChips(); }
+$("#btnAddDoc").addEventListener("click",addDoc);
+$("#fDocNovo").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); addDoc(); } });
+$("#chipsDocs").addEventListener("click",e=>{ const b=e.target.closest("button[data-rm]"); if(!b) return; docsCustom.splice(+b.dataset.rm,1); renderChips(); });
+$("#btnSalvar").addEventListener("click",()=>salvar(false));
+$("#btnSalvarNovo").addEventListener("click",()=>salvar(true));
+$("#btnDuplicar").addEventListener("click",()=>{
+  if(!editId) return; const orig=CAMPOS.find(c=>c.id===editId);
+  const id=Math.max(0,...CAMPOS.map(c=>c.id))+1;
+  const copia=JSON.parse(JSON.stringify(orig)); copia.id=id; copia.nome=orig.nome+" (cópia)"; copia.utilizado=false;
+  CAMPOS.push(copia); montarCidades(); mostrarToast(`Campo duplicado como <b>${copia.nome}</b>.`); abrirForm(copia);
+});
+$("#btnInativar").addEventListener("click",()=>{ if(!editId) return; const c=CAMPOS.find(x=>x.id===editId); c.status="inativo"; segSet("segStatus","inativo"); mostrarToast(`Campo <b>${c.nome}</b> inativado.`); });
+$("#btnExcluir").addEventListener("click",()=>{
+  if(!editId) return; const c=CAMPOS.find(x=>x.id===editId);
+  if(c.utilizado){ mostrarToast("Não é possível excluir: o campo já foi utilizado."); return; }
+  const _i=CAMPOS.findIndex(x=>x.id===editId); if(_i>=0) CAMPOS.splice(_i,1); montarCidades(); mostrarToast(`Campo <b>${c.nome}</b> excluído.`); fecharForm();
+});
+window.camposShowList=()=>{ $("#viewForm").classList.add("hidden"); $("#viewLista").classList.remove("hidden"); renderLista(); };
+montarCidades();
+renderLista();
+})();
+
+// ============================================================
+//  ABA 3 · ALOCAÇÃO DE CAMPOS
+// ============================================================
+(function(){
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+window.DB=window.DB||{};
+DB.unidades=DB.unidades||["BH Centro","Venda Nova","Contagem"];
+DB.turmas=[
+ {id:"ENF I · BH-A",  unidade:"BH Centro",  curso:"enfermagem", alunos:22, periodo:"5º período · Estágio I"},
+ {id:"ENF II · BH-A", unidade:"BH Centro",  curso:"enfermagem", alunos:18, periodo:"7º período · Estágio II"},
+ {id:"RAD I · BH-A",  unidade:"BH Centro",  curso:"radiologia", alunos:15, periodo:"3º período · Estágio I"},
+ {id:"ENF I · VN-A",  unidade:"Venda Nova", curso:"enfermagem", alunos:20, periodo:"5º período · Estágio I"},
+ {id:"ENF II · VN-A", unidade:"Venda Nova", curso:"enfermagem", alunos:16, periodo:"7º período · Estágio II"},
+ {id:"ENF I · CT-A",  unidade:"Contagem",   curso:"enfermagem", alunos:24, periodo:"5º período · Estágio I"},
+ {id:"RAD I · CT-A",  unidade:"Contagem",   curso:"radiologia", alunos:14, periodo:"3º período · Estágio I"},
+];
+DB.alocacoes=[
+ {id:1, campoId:1, unidade:"BH Centro",  turmaId:"ENF I · BH-A",  competencia:"2026-08", modelo:"semana_3x2",   semana:"par",   turno:"M", alunos:22},
+ {id:2, campoId:1, unidade:"Venda Nova", turmaId:"ENF I · VN-A",  competencia:"2026-08", modelo:"semana_3x2",   semana:"impar", turno:"M", alunos:20},
+ {id:3, campoId:3, unidade:"Venda Nova", turmaId:"ENF II · VN-A", competencia:"2026-08", modelo:"semana_todos", semana:"",      turno:"T", alunos:16},
+ {id:4, campoId:7, unidade:"Contagem",   turmaId:"ENF I · CT-A",  competencia:"2026-08", modelo:"semana_3x2",   semana:"par",   turno:"M", alunos:24},
+ {id:5, campoId:6, unidade:"BH Centro",  turmaId:"RAD I · BH-A",  competencia:"2026-08", modelo:"semana_todos", semana:"",      turno:"M", alunos:15},
+ {id:6, campoId:3, unidade:"Contagem",   turmaId:"ENF I · CT-A",  competencia:"2026-09", modelo:"semana_3x2",   semana:"impar", turno:"M", alunos:24},
+];
+DB.alocacoes.forEach(a=>{
+  if(a.turno!==undefined && !a.turnos){ a.turnos=[a.turno]; delete a.turno; }
+  if(!a.curso){ a.curso=(a.turmaId||"").indexOf("RAD")===0?"radiologia":"enfermagem"; }
+  if(!a.dataIni){ const p=a.competencia.split("-"); a.dataIni=a.competencia+"-01"; a.dataFim=a.competencia+"-"+String(new Date(+p[0],+p[1],0).getDate()).padStart(2,"0"); }
+});
+const MESES=[{v:"2026-06",nome:"Junho / 2026"},{v:"2026-07",nome:"Julho / 2026"},{v:"2026-08",nome:"Agosto / 2026"},{v:"2026-09",nome:"Setembro / 2026"},{v:"2026-10",nome:"Outubro / 2026"},{v:"2026-11",nome:"Novembro / 2026"},{v:"2026-12",nome:"Dezembro / 2026"}];
+const CURSO_LBL={enfermagem:"Enfermagem",radiologia:"Radiologia",ambos:"Ambos"};
+const TURNO_LBL={M:"Manhã",T:"Tarde",N:"Noite",S:"Sábado",D:"Domingo"};
+const MODELO_LBL={semana_todos:"Todos os dias (seg–sex)",semana_3x2:"Modelo 3×2",fds_sabdom:"Sábado e Domingo",fds_sab:"Apenas Sábado",fds_dom:"Apenas Domingo"};
+function totalVagas(c){ return ["M","T","N","S","D"].reduce((s,k)=>s+((c.vagas&&c.vagas[k])||0),0); }
+function capOf(campo,modelo,turno){ if(modelo==="fds_sab")return campo.vagas.S||0; if(modelo==="fds_dom")return campo.vagas.D||0; if(modelo==="fds_sabdom")return Math.min(campo.vagas.S||0,campo.vagas.D||0); return (campo.vagas[turno])||0; }
+function usedIn(campoId,comp,turno,slot,exclId){ const conf=CONFLI[slot]; return DB.alocacoes.filter(x=>x.id!==exclId&&x.campoId===campoId&&x.competencia===comp&&conf.includes(slotKey(x))&&(x.turnos||[]).includes(turno)).reduce((s,x)=>s+x.alunos,0); }
+function fmtDate(s){ if(!s)return""; const p=s.split("-"); return p.length===3?`${p[2]}/${p[1]}`:s; }
+function getTurnos(){ return [...document.querySelectorAll("#afTurno button.on")].map(b=>b.dataset.v); }
+function setTurnos(arr){ document.querySelectorAll("#afTurno button").forEach(b=>b.classList.toggle("on",arr.indexOf(b.dataset.v)>=0)); }
+const CONFLI={SEM:["SEM","PAR","IMPAR"],PAR:["SEM","PAR"],IMPAR:["SEM","IMPAR"],FDS:["FDS","SAB","DOM"],SAB:["FDS","SAB"],DOM:["FDS","DOM"]};
+const REF=new Date(2026,7,3); REF.setHours(0,0,0,0);   // semana de 03/08/2026 = PAR
+
+function campoById(id){ return DB.campos.find(c=>c.id===id); }
+function turmaById(id){ return DB.turmas.find(t=>t.id===id); }
+function nomeMes(v){ return (MESES.find(m=>m.v===v)||{}).nome||v; }
+function nomeMesCurto(v){ return nomeMes(v).split(" / ")[0]; }
+function mondayParity(mon){ const w=Math.round((mon-REF)/(7*864e5)); return (((w%2)+2)%2)===0?"par":"impar"; }
+function weeksOf(mesV){
+  const [y,m]=mesV.split("-").map(Number);
+  const first=new Date(y,m-1,1), last=new Date(y,m,0);
+  let d=new Date(first); const dow=d.getDay();
+  const off=(dow===0)?1:(dow===1?0:8-dow); d.setDate(d.getDate()+off);
+  const out=[]; let i=1;
+  while(d<=last){ out.push({semana:i++,dia:d.getDate(),parity:mondayParity(d)}); d=new Date(d); d.setDate(d.getDate()+7); }
+  return out;
+}
+function slotKey(a){ if(a.modelo==="semana_todos")return"SEM"; if(a.modelo==="semana_3x2")return a.semana==="par"?"PAR":"IMPAR"; if(a.modelo==="fds_sabdom")return"FDS"; if(a.modelo==="fds_sab")return"SAB"; return"DOM"; }
+function modeloTxt(a){ return a.modelo==="semana_3x2"?`3×2 · ${a.semana==="par"?"PAR":"ÍMPAR"}`:MODELO_LBL[a.modelo]; }
+function statusDe(pct){ if(pct>=100)return{cls:"lot",cor:"r",txt:"🔴 Lotado"}; if(pct>=90)return{cls:"quase",cor:"a",txt:"🟡 Quase lotado"}; return{cls:"disp",cor:"v",txt:"🟢 Disponível"}; }
+function ocupRow(a){
+  const campo=campoById(a.campoId); if(!campo)return{pct:0,used:0,vagas:0,st:statusDe(0)};
+  const slot=slotKey(a); let best={pct:0,used:0,vagas:0};
+  (a.turnos||[]).forEach(t=>{ const cap=capOf(campo,a.modelo,t); const used=usedIn(a.campoId,a.competencia,t,slot,-1); const pct=cap?Math.round(used/cap*100):0; if(pct>=best.pct) best={pct,used,vagas:cap}; });
+  return{...best,st:statusDe(best.pct)};
+}
+
+function optMeses(sel,incTodas){ sel.innerHTML=(incTodas?`<option value="">Competência: todas</option>`:"")+MESES.map(m=>`<option value="${m.v}">${m.nome}</option>`).join(""); }
+optMeses($("#aComp"),true);
+optMeses($("#afComp"),false); $("#afComp").value="2026-08";
+$("#aUnidade").innerHTML=`<option value="">Unidade: todas</option>`+DB.unidades.map(u=>`<option value="${u}">${u}</option>`).join("");
+$("#afUnidade").innerHTML=`<option value="">Selecione…</option>`+DB.unidades.map(u=>`<option value="${u}">${u}</option>`).join("");
+function preencherCampos(){
+  const cidades=[...new Set(DB.campos.map(c=>c.cidade))].sort();
+  $("#aCidade").innerHTML=`<option value="">Cidade: todas</option>`+cidades.map(c=>`<option value="${c}">${c}</option>`).join("");
+  $("#aCampo").innerHTML=`<option value="">Campo: todos</option>`+DB.campos.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
+  const sel=$("#afCampo").value;
+  $("#afCampo").innerHTML=`<option value="">Selecione…</option>`+DB.campos.filter(c=>c.status==="ativo").map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
+  $("#afCampo").value=sel;
+}
+preencherCampos();
+
+let ordenarPor="campo", ordemAsc=true, pagina=1; const PAG_TAM=8; let editId=null;
+
+function filtrarOrdenar(){
+  const q=$("#aBusca").value.trim().toLowerCase();
+  const fComp=$("#aComp").value,fUni=$("#aUnidade").value,fCur=$("#aCurso").value,fCam=$("#aCampo").value,fCid=$("#aCidade").value,fTur=$("#aTurno").value,fMod=$("#aModelo").value;
+  let arr=DB.alocacoes.map(a=>({...a,campo:campoById(a.campoId)})).filter(a=>a.campo);
+  arr=arr.filter(a=>{
+    if(q && !a.campo.nome.toLowerCase().includes(q))return false;
+    if(fComp && a.competencia!==fComp)return false;
+    if(fUni && a.unidade!==fUni)return false;
+    if(fCur && a.curso!==fCur)return false;
+    if(fCam && a.campoId!==+fCam)return false;
+    if(fCid && a.campo.cidade!==fCid)return false;
+    if(fTur && !(a.turnos||[]).includes(fTur))return false;
+    if(fMod && a.modelo!==fMod)return false;
+    return true;
+  });
+  const dir=ordemAsc?1:-1;
+  const key={campo:a=>a.campo.nome,unidade:a=>a.unidade,turma:a=>a.turmaId,comp:a=>a.competencia,modelo:a=>modeloTxt(a),turno:a=>(a.turnos||[]).join(","),alunos:a=>a.alunos,ocup:a=>ocupRow(a).pct,status:a=>({disp:0,quase:1,lot:2}[ocupRow(a).st.cls])}[ordenarPor];
+  arr.sort((x,y)=>{const vx=key(x),vy=key(y);return typeof vx==="string"?vx.localeCompare(vy,"pt-BR")*dir:(vx-vy)*dir;});
+  return arr;
+}
+function renderLista(){
+  const arr=filtrarOrdenar();
+  const totalPag=Math.max(1,Math.ceil(arr.length/PAG_TAM)); if(pagina>totalPag)pagina=totalPag;
+  const inicio=(pagina-1)*PAG_TAM, itens=arr.slice(inicio,inicio+PAG_TAM);
+  if(!itens.length){
+    $("#aTbody").innerHTML=`<tr><td colspan="9" class="vazio">Nenhuma alocação encontrada com os filtros atuais.</td></tr>`;
+  }else{
+    $("#aTbody").innerHTML=itens.map(a=>{const o=ocupRow(a);return `<tr data-id="${a.id}">
+      <td><span class="campo-nome">${a.campo.nome}</span></td>
+      <td><span class="uni-badge">${a.unidade}</span></td>
+      <td>${a.turmaId||"—"}</td>
+      <td><span class="mes-ref">${nomeMesCurto(a.competencia)}<small style="display:block;color:var(--cinza-400);font-weight:500;font-size:11px">${fmtDate(a.dataIni)}–${fmtDate(a.dataFim)}</small></span></td>
+      <td>${modeloTxt(a)}</td>
+      <td class="center"><span class="turnos">${(a.turnos||[]).map(t=>`<i title="${TURNO_LBL[t]}">${t}</i>`).join("")}</span></td>
+      <td class="center"><span class="vagas-n">${a.alunos}</span></td>
+      <td class="ocup-cell"><div class="ocup-top"><span class="ocup-pct" style="color:var(--${o.st.cor==='v'?'verde':o.st.cor==='a'?'amarelo':'vermelho'})">${o.pct}%</span><span class="ocup-frac">${o.used}/${o.vagas}</span></div><div class="ocup-bar"><div class="ocup-in ${o.st.cor}" data-w="${Math.min(o.pct,100)}"></div></div></td>
+      <td><span class="status ${o.st.cls}">${o.st.txt}</span></td></tr>`;}).join("");
+    requestAnimationFrame(()=>{ $$("#aTbody .ocup-in").forEach(b=>b.style.width=b.dataset.w+"%"); });
+  }
+  $$("#aTable thead th").forEach(th=>{const on=th.dataset.col===ordenarPor;th.classList.toggle("sorted",on);const a=th.querySelector(".arrow");if(a)a.textContent=on?(ordemAsc?"▲":"▼"):"▲▼";});
+  $("#aPagInfo").textContent=arr.length?`Mostrando ${inicio+1}–${Math.min(inicio+PAG_TAM,arr.length)} de ${arr.length} alocações`:"Nenhuma alocação";
+  let b=`<button data-p="prev" ${pagina===1?"disabled":""}>‹</button>`; for(let p=1;p<=totalPag;p++)b+=`<button data-p="${p}" class="${p===pagina?'on':''}">${p}</button>`; b+=`<button data-p="next" ${pagina===totalPag?"disabled":""}>›</button>`; $("#aPagBtns").innerHTML=b;
+}
+
+function segSet(id,v){ $$("#"+id+" button").forEach(b=>b.classList.toggle("on",b.dataset.v===String(v))); }
+function segGet(id){ return ($("#"+id+" button.on")||{}).dataset?.v; }
+
+function renderCal(){
+  const mesV=$("#afComp").value; const weeks=weeksOf(mesV);
+  const is3x2 = segGet("afTipo")==="semana" && segGet("afSemModelo")==="semana_3x2";
+  const semSel = segGet("afSemana");
+  let html=`<div class="comp-lbl">${nomeMes(mesV)}</div><div class="nota">Prévia automática · gerada a partir do calendário real.</div>`;
+  html+=weeks.map(w=>{
+    const hl=is3x2 && w.parity===semSel;
+    return `<div class="cal-week" style="${hl?'border-color:var(--laranja-500);background:var(--laranja-100)':''}"><div class="wk">Semana ${w.semana}<small>inicia dia ${String(w.dia).padStart(2,'0')}</small></div><span class="badge-${w.parity}">${w.parity==='par'?'PAR':'ÍMPAR'}</span></div>`;
+  }).join("");
+  html+=`<div class="cal-ref">Referência fixa: a semana iniciada em <b>03/08/2026</b> é <b>PAR</b>. As demais semanas — inclusive a virada entre os meses — são calculadas automaticamente.</div>`;
+  $("#afCal").innerHTML=html;
+}
+function infoCampo(){
+  const campo=campoById(+$("#afCampo").value), box=$("#afCampoInfo");
+  if(!campo){ box.classList.remove("show"); $$("#afTurno button").forEach(b=>b.classList.remove("off")); atualizarOcupacaoTurnos(); return; }
+  const turnos=["M","T","N","S","D"].filter(t=>campo.vagas[t]>0).map(t=>`${TURNO_LBL[t]} (${campo.vagas[t]})`).join(", ")||"—";
+  box.innerHTML=`<div class="item"><span>Curso</span>${CURSO_LBL[campo.curso]}</div><div class="item"><span>Capacidade</span>${totalVagas(campo)} vagas</div><div class="item"><span>Vagas por período</span>${turnos}</div><div class="item"><span>Preceptor</span>${campo.preceptor?'Sim':'Não'}</div><div class="item"><span>Alternância</span>${campo.alternado?'Sim (3×2)':'Não'}</div>`;
+  box.classList.add("show");
+  updateTurnoAvail(); atualizarOcupacaoTurnos();
+}
+function updateTurnoAvail(){
+  const campo=campoById(+$("#afCampo").value), weekend=segGet("afTipo")==="fds";
+  $$("#afTurno button").forEach(b=>b.classList.toggle("off", campo? (weekend?false:!(campo.vagas[b.dataset.v]>0)) : false));
+}
+function atualizarOcupacaoTurnos(){
+  const campo=campoById(+$("#afCampo").value), tipo=segGet("afTipo");
+  const modelo = tipo==="semana"? segGet("afSemModelo") : segGet("afFds");
+  const slot=slotKey({modelo,semana:segGet("afSemana")}), comp=$("#afComp").value;
+  ["M","T","N"].forEach(t=>{
+    const badge=$(`#afTurno .ocp[data-t="${t}"]`); if(!badge)return;
+    if(!campo){ badge.textContent=""; badge.className="ocp"; return; }
+    const cap=capOf(campo,modelo,t);
+    if(cap<=0){ badge.textContent="—"; badge.className="ocp none"; return; }
+    const used=usedIn(campo.id,comp,t,slot,editId);
+    if(used>=cap){ badge.textContent="Ocupado"; badge.className="ocp full"; }
+    else { badge.textContent=`${used}/${cap}`; badge.className="ocp"; }
+  });
+}
+function toggleFreq(){
+  const tipo=segGet("afTipo");
+  $("#wrapSemModelo").style.display = tipo==="semana"?"":"none";
+  const is3x2 = tipo==="semana" && segGet("afSemModelo")==="semana_3x2";
+  $("#wrapSemana").style.display = is3x2?"":"none";
+  $("#wrapFds").style.display = tipo==="fds"?"":"none";
+  $("#turnoHint").textContent = tipo==="fds" ? "escolha 1 ou 2 turnos" : "";
+  if(tipo!=="fds"){ const on=[...$$("#afTurno button.on")]; on.slice(1).forEach(b=>b.classList.remove("on")); }
+  updateTurnoAvail(); atualizarOcupacaoTurnos(); renderCal();
+}
+function abrirForm(aloc){
+  editId=aloc?aloc.id:null;
+  $("#aFormTitulo").textContent=aloc?"Editar Alocação":"Nova Alocação";
+  preencherCampos();
+  const a=aloc||{competencia:"2026-08",campoId:"",unidade:"",turmaId:"",curso:"enfermagem",modelo:"semana_todos",semana:"par",turnos:["M"],alunos:"",dataIni:"",dataFim:""};
+  $("#afComp").value=a.competencia;
+  $("#afCampo").value=a.campoId||"";
+  $("#afUnidade").value=a.unidade||"";
+  $("#afTurma").value=a.turmaId||"";
+  segSet("afCurso", a.curso||"enfermagem");
+  $("#afAlunos").value=a.alunos;
+  $("#afDataIni").value=a.dataIni||""; $("#afDataFim").value=a.dataFim||"";
+  infoCampo();
+  const tipo=a.modelo.indexOf("fds")===0?"fds":"semana"; segSet("afTipo",tipo);
+  segSet("afSemModelo", a.modelo==="semana_3x2"?"semana_3x2":"semana_todos");
+  segSet("afSemana", a.semana||"par");
+  segSet("afFds", a.modelo.indexOf("fds")===0?a.modelo:"fds_sabdom");
+  setTurnos(a.turnos&&a.turnos.length?a.turnos:["M"]);
+  toggleFreq();
+  $("#alocLista").classList.add("hidden"); $("#alocForm").classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"instant"});
+}
+function fecharForm(){ $("#alocForm").classList.add("hidden"); $("#alocLista").classList.remove("hidden"); renderLista(); }
+function coletarForm(){
+  const tipo=segGet("afTipo"); let modelo,semana="";
+  if(tipo==="semana"){ modelo=segGet("afSemModelo"); if(modelo==="semana_3x2") semana=segGet("afSemana"); }
+  else { modelo=segGet("afFds"); }
+  return {competencia:$("#afComp").value, campoId:+$("#afCampo").value||"", unidade:$("#afUnidade").value, turmaId:$("#afTurma").value.trim(), curso:segGet("afCurso"), modelo, semana, turnos:getTurnos(), alunos:parseInt($("#afAlunos").value)||0, dataIni:$("#afDataIni").value, dataFim:$("#afDataFim").value};
+}
+function validar(d){
+  const e=[], campo=campoById(d.campoId);
+  const fds=d.modelo.indexOf("fds")===0;
+  if(!campo)e.push("Selecione o campo.");
+  if(!d.unidade)e.push("Selecione a unidade.");
+  if(!d.turmaId)e.push("Informe a turma.");
+  if(!d.turnos.length)e.push("Selecione ao menos um turno.");
+  if(fds && d.turnos.length>2)e.push("No final de semana, escolha no máximo 2 turnos.");
+  if(!d.dataIni||!d.dataFim)e.push("Informe as datas inicial e final.");
+  else if(d.dataFim<d.dataIni)e.push("A data final deve ser igual ou posterior à inicial.");
+  if(campo&&campo.curso!=="ambos"&&campo.curso!==d.curso)e.push(`Curso incompatível: ${CURSO_LBL[d.curso]} × campo de ${CURSO_LBL[campo.curso]}.`);
+  if(campo&&!fds) d.turnos.forEach(t=>{ if(!(campo.vagas[t]>0))e.push(`Turno ${TURNO_LBL[t]} não disponível neste campo.`); });
+  if(campo&&d.modelo==="fds_sab"&&!(campo.vagas.S>0))e.push("Este campo não oferece vagas de Sábado.");
+  if(campo&&d.modelo==="fds_dom"&&!(campo.vagas.D>0))e.push("Este campo não oferece vagas de Domingo.");
+  if(campo&&d.modelo==="fds_sabdom"&&!(campo.vagas.S>0&&campo.vagas.D>0))e.push("Este campo não oferece vagas de Sábado e Domingo.");
+  if(campo&&d.modelo==="semana_3x2"&&!campo.alternado)e.push("Este campo não trabalha com alternância (3×2).");
+  if(campo&&d.turmaId&&d.turnos.length){
+    const slot=slotKey(d);
+    d.turnos.forEach(t=>{
+      const cap=capOf(campo,d.modelo,t);
+      const used=usedIn(d.campoId,d.competencia,t,slot,editId);
+      if(used+d.alunos>cap)e.push(`Excede a capacidade no turno ${TURNO_LBL[t]}: ${used+d.alunos}/${cap}.`);
+    });
+    const dup=DB.alocacoes.find(a=>a.id!==editId&&a.campoId===d.campoId&&a.competencia===d.competencia&&a.turmaId===d.turmaId&&slotKey(a)===slot&&(a.turnos||[]).some(t=>d.turnos.includes(t)));
+    if(dup)e.push("Já existe alocação para esta turma no mesmo período/turno.");
+  }
+  return e;
+}
+function salvar(nova){
+  const d=coletarForm(), e=validar(d);
+  if(e.length){ mostrarToast("⚠️ "+e[0]+(e.length>1?` (+${e.length-1})`:"")); return; }
+  if(editId){ Object.assign(DB.alocacoes.find(a=>a.id===editId),d); mostrarToast("Alocação atualizada."); }
+  else{ const id=Math.max(0,...DB.alocacoes.map(a=>a.id))+1; DB.alocacoes.push({id,...d}); mostrarToast(`Alocação criada em <b>${campoById(d.campoId).nome}</b>.`); }
+  if(nova)abrirForm(null); else fecharForm();
+}
+
+$("#btnNovaAloc").addEventListener("click",()=>abrirForm(null));
+$("#aVoltar").addEventListener("click",fecharForm);
+$("#aTbody").addEventListener("click",e=>{ const tr=e.target.closest("tr[data-id]"); if(!tr)return; abrirForm(DB.alocacoes.find(a=>a.id===+tr.dataset.id)); });
+$("#aBusca").addEventListener("input",()=>{pagina=1;renderLista();});
+["aComp","aUnidade","aCurso","aCampo","aCidade","aTurno","aModelo"].forEach(id=>$("#"+id).addEventListener("change",()=>{pagina=1;renderLista();}));
+$("#aLimpar").addEventListener("click",()=>{ $("#aBusca").value=""; ["aComp","aUnidade","aCurso","aCampo","aCidade","aTurno","aModelo"].forEach(id=>$("#"+id).value=""); pagina=1; renderLista(); });
+$$("#aTable thead th").forEach(th=>th.addEventListener("click",()=>{ const c=th.dataset.col; if(ordenarPor===c)ordemAsc=!ordemAsc; else{ordenarPor=c;ordemAsc=true;} renderLista(); }));
+$("#aPagBtns").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; const p=b.dataset.p; if(p==="prev")pagina=Math.max(1,pagina-1); else if(p==="next")pagina++; else pagina=parseInt(p,10); renderLista(); });
+$("#afComp").addEventListener("change",()=>{ renderCal(); atualizarOcupacaoTurnos(); });
+$("#afCampo").addEventListener("change",infoCampo);
+["afTipo","afSemModelo","afSemana","afFds","afCurso"].forEach(id=>$("#"+id).addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||b.classList.contains("off"))return; $$("#"+id+" button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); if(id!=="afCurso")toggleFreq(); }));
+$("#afTurno").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b||b.classList.contains("off"))return;
+  const weekend=segGet("afTipo")==="fds";
+  if(weekend){
+    if(!b.classList.contains("on") && $$("#afTurno button.on").length>=2){ mostrarToast("No final de semana, escolha no máximo 2 turnos."); return; }
+    b.classList.toggle("on");
+    if(!$$("#afTurno button.on").length) b.classList.add("on");
+  } else { $$("#afTurno button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); }
+  atualizarOcupacaoTurnos();
+});
+$("#aSalvar").addEventListener("click",()=>salvar(false));
+$("#aSalvarNova").addEventListener("click",()=>salvar(true));
+
+window.alocShowList=()=>{ preencherCampos(); $("#alocForm").classList.add("hidden"); $("#alocLista").classList.remove("hidden"); renderLista(); };
+renderLista();
+})();
+</script>
+</body>
+</html>
