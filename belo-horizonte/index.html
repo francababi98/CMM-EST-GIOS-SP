@@ -681,6 +681,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ============================================================
 //  TOAST + NAVEGAÇÃO ENTRE ABAS (global)
@@ -1021,8 +1022,10 @@ function coletarForm(){
 function salvar(novoDepois){
   const dados=coletarForm();
   if(!dados.nome){ mostrarToast("Informe o <b>nome do campo</b>."); return; }
-  if(editId){ const c=CAMPOS.find(x=>x.id===editId); Object.assign(c,dados); mostrarToast(`Campo <b>${dados.nome}</b> atualizado.`); }
-  else{ const id=Math.max(0,...CAMPOS.map(c=>c.id))+1; CAMPOS.push({id,...dados,utilizado:false}); mostrarToast(`Campo <b>${dados.nome}</b> cadastrado.`); }
+  let alvo;
+  if(editId){ alvo=CAMPOS.find(x=>x.id===editId); Object.assign(alvo,dados); mostrarToast(`Campo <b>${dados.nome}</b> atualizado.`); }
+  else{ const id=Math.max(0,...CAMPOS.map(c=>c.id))+1; alvo={id,...dados,utilizado:false}; CAMPOS.push(alvo); mostrarToast(`Campo <b>${dados.nome}</b> cadastrado.`); }
+  if(window.PB) window.PB.saveCampo(alvo);
   montarCidades();
   if(novoDepois){ abrirForm(null); } else { fecharForm(); }
 }
@@ -1052,15 +1055,15 @@ $("#btnDuplicar").addEventListener("click",()=>{
   if(!editId) return; const orig=CAMPOS.find(c=>c.id===editId);
   const id=Math.max(0,...CAMPOS.map(c=>c.id))+1;
   const copia=JSON.parse(JSON.stringify(orig)); copia.id=id; copia.nome=orig.nome+" (cópia)"; copia.utilizado=false;
-  CAMPOS.push(copia); montarCidades(); mostrarToast(`Campo duplicado como <b>${copia.nome}</b>.`); abrirForm(copia);
+  CAMPOS.push(copia); if(window.PB) window.PB.saveCampo(copia); montarCidades(); mostrarToast(`Campo duplicado como <b>${copia.nome}</b>.`); abrirForm(copia);
 });
-$("#btnInativar").addEventListener("click",()=>{ if(!editId) return; const c=CAMPOS.find(x=>x.id===editId); c.status="inativo"; segSet("segStatus","inativo"); mostrarToast(`Campo <b>${c.nome}</b> inativado.`); });
+$("#btnInativar").addEventListener("click",()=>{ if(!editId) return; const c=CAMPOS.find(x=>x.id===editId); c.status="inativo"; segSet("segStatus","inativo"); if(window.PB) window.PB.saveCampo(c); mostrarToast(`Campo <b>${c.nome}</b> inativado.`); });
 $("#btnExcluir").addEventListener("click",()=>{
-  if(!editId) return; const c=CAMPOS.find(x=>x.id===editId);
+  if(!editId) return; const c=CAMPOS.find(x=>x.id===editId); const _id=editId;
   if(c.utilizado){ mostrarToast("Não é possível excluir: o campo já foi utilizado."); return; }
-  const _i=CAMPOS.findIndex(x=>x.id===editId); if(_i>=0) CAMPOS.splice(_i,1); montarCidades(); mostrarToast(`Campo <b>${c.nome}</b> excluído.`); fecharForm();
+  const _i=CAMPOS.findIndex(x=>x.id===_id); if(_i>=0) CAMPOS.splice(_i,1); if(window.PB) window.PB.delCampo(_id); montarCidades(); mostrarToast(`Campo <b>${c.nome}</b> excluído.`); fecharForm();
 });
-window.camposShowList=()=>{ $("#viewForm").classList.add("hidden"); $("#viewLista").classList.remove("hidden"); renderLista(); };
+window.camposShowList=()=>{ montarCidades(); $("#viewForm").classList.add("hidden"); $("#viewLista").classList.remove("hidden"); renderLista(); };
 montarCidades();
 renderLista();
 })();
@@ -1303,8 +1306,10 @@ function validar(d){
 function salvar(nova){
   const d=coletarForm(), e=validar(d);
   if(e.length){ mostrarToast("⚠️ "+e[0]+(e.length>1?` (+${e.length-1})`:"")); return; }
-  if(editId){ Object.assign(DB.alocacoes.find(a=>a.id===editId),d); mostrarToast("Alocação atualizada."); }
-  else{ const id=Math.max(0,...DB.alocacoes.map(a=>a.id))+1; DB.alocacoes.push({id,...d}); mostrarToast(`Alocação criada em <b>${campoById(d.campoId).nome}</b>.`); }
+  let alvo;
+  if(editId){ alvo=DB.alocacoes.find(a=>a.id===editId); Object.assign(alvo,d); mostrarToast("Alocação atualizada."); }
+  else{ const id=Math.max(0,...DB.alocacoes.map(a=>a.id))+1; alvo={id,...d}; DB.alocacoes.push(alvo); mostrarToast(`Alocação criada em <b>${campoById(d.campoId).nome}</b>.`); }
+  if(window.PB) window.PB.saveAloc(alvo);
   if(nova)abrirForm(null); else fecharForm();
 }
 
@@ -1334,6 +1339,55 @@ $("#aSalvarNova").addEventListener("click",()=>salvar(true));
 
 window.alocShowList=()=>{ preencherCampos(); $("#alocForm").classList.add("hidden"); $("#alocLista").classList.remove("hidden"); renderLista(); };
 renderLista();
+})();
+</script>
+
+<script>
+// ============================================================
+//  CONEXÃO COM O BANCO (Supabase) — mesmo projeto do SP
+//  Tabelas: campos_bh, alocacoes_bh (veja schema.sql)
+// ============================================================
+(function(){
+  const URL="https://uuurxnwttokdwahescwu.supabase.co";
+  const KEY="sb_publishable_zxt4r7TUgCdddqDaB7m0Hg_2I_adQtI";
+  if(!window.supabase){ console.warn("Supabase JS não carregou; usando dados de exemplo."); return; }
+  const sb=supabase.createClient(URL,KEY);
+
+  // ---- conversão entre o objeto da tela e as colunas do banco ----
+  const campoOut=c=>({id:c.id,nome:c.nome,endereco:c.endereco||"",cidade:c.cidade||"",curso:c.curso,status:c.status,vagas:c.vagas||{},alternado:!!c.alternado,compartilhado:!!c.compartilhado,preceptor:!!c.preceptor,contra:c.contra,valor:c.valor||0,contatos:c.contatos||[],docs:c.docs||[],horarios:c.horarios||{},obs:c.obs||"",utilizado:!!c.utilizado});
+  const campoIn=r=>({id:r.id,nome:r.nome,endereco:r.endereco||"",cidade:r.cidade||"",curso:r.curso||"enfermagem",status:r.status||"ativo",vagas:r.vagas||{M:0,T:0,N:0,S:0,D:0},alternado:!!r.alternado,compartilhado:!!r.compartilhado,preceptor:!!r.preceptor,contra:r.contra||"sem",valor:r.valor||0,contatos:r.contatos||[],docs:r.docs||[],horarios:r.horarios||{},obs:r.obs||"",utilizado:!!r.utilizado});
+  const alocOut=a=>({id:a.id,campo_id:a.campoId,unidade:a.unidade||"",turma:a.turmaId||"",curso:a.curso||"enfermagem",competencia:a.competencia||"",modelo:a.modelo,semana:a.semana||"",turnos:a.turnos||[],alunos:a.alunos||0,data_ini:a.dataIni||null,data_fim:a.dataFim||null});
+  const alocIn=r=>({id:r.id,campoId:r.campo_id,unidade:r.unidade||"",turmaId:r.turma||"",curso:r.curso||"enfermagem",competencia:r.competencia||"",modelo:r.modelo||"semana_todos",semana:r.semana||"",turnos:r.turnos||[],alunos:r.alunos||0,dataIni:r.data_ini||"",dataFim:r.data_fim||""});
+
+  function erro(msg,e){ console.error(msg,e); mostrarToast("⚠️ "+msg); }
+
+  window.PB={
+    ativo:false,
+    saveCampo(c){ if(!this.ativo)return; sb.from("campos_bh").upsert(campoOut(c)).then(({error})=>{ if(error) erro("Não foi possível salvar o campo no banco.",error); }); },
+    delCampo(id){ if(!this.ativo)return; sb.from("campos_bh").delete().eq("id",id).then(({error})=>{ if(error) erro("Não foi possível excluir o campo no banco.",error); }); },
+    saveAloc(a){ if(!this.ativo)return; sb.from("alocacoes_bh").upsert(alocOut(a)).then(({error})=>{ if(error) erro("Não foi possível salvar a alocação no banco.",error); }); },
+  };
+
+  async function carregar(){
+    const rc=await sb.from("campos_bh").select("*").order("id");
+    if(rc.error){ mostrarToast("Banco ainda não criado — rode o schema.sql. Usando dados de exemplo."); console.warn(rc.error); return; }
+    window.PB.ativo=true;
+    if(rc.data.length===0){
+      const {error}=await sb.from("campos_bh").upsert(DB.campos.map(campoOut));   // 1ª vez: popula
+      if(error){ erro("Falha ao popular os campos iniciais.",error); return; }
+    } else {
+      DB.campos.length=0; rc.data.forEach(r=>DB.campos.push(campoIn(r)));
+    }
+    const ra=await sb.from("alocacoes_bh").select("*").order("id");
+    if(!ra.error){
+      if(ra.data.length===0){ const {error}=await sb.from("alocacoes_bh").upsert(DB.alocacoes.map(alocOut)); if(error) erro("Falha ao popular as alocações iniciais.",error); }
+      else { DB.alocacoes.length=0; ra.data.forEach(r=>DB.alocacoes.push(alocIn(r))); }
+    }
+    if(window.camposShowList) window.camposShowList();
+    if(window.alocShowList) window.alocShowList();
+    mostrarToast("✅ Conectado ao banco de dados.");
+  }
+  carregar();
 })();
 </script>
 </body>
