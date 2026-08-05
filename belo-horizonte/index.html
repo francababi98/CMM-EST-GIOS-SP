@@ -1368,17 +1368,10 @@ if(window.dashRerender) window.dashRerender();
     const rc=await sb.from("campos_bh").select("*").order("id");
     if(rc.error){ mostrarToast("Banco ainda não criado — rode o schema.sql. Usando dados de exemplo."); console.warn(rc.error); return; }
     window.PB.ativo=true;
-    if(rc.data.length===0){
-      const {error}=await sb.from("campos_bh").upsert(DB.campos.map(campoOut));   // 1ª vez: popula
-      if(error){ erro("Falha ao popular os campos iniciais.",error); return; }
-    } else {
-      DB.campos.length=0; rc.data.forEach(r=>DB.campos.push(campoIn(r)));
-    }
+    // carrega exatamente o que está no banco (vazio continua vazio — sem repopular)
+    DB.campos.length=0; rc.data.forEach(r=>DB.campos.push(campoIn(r)));
     const ra=await sb.from("alocacoes_bh").select("*").order("id");
-    if(!ra.error){
-      if(ra.data.length===0){ const {error}=await sb.from("alocacoes_bh").upsert(DB.alocacoes.map(alocOut)); if(error) erro("Falha ao popular as alocações iniciais.",error); }
-      else { DB.alocacoes.length=0; ra.data.forEach(r=>DB.alocacoes.push(alocIn(r))); }
-    }
+    if(!ra.error){ DB.alocacoes.length=0; ra.data.forEach(r=>DB.alocacoes.push(alocIn(r))); }
     if(window.camposShowList) window.camposShowList();
     if(window.alocShowList) window.alocShowList();
     if(window.dashRerender) window.dashRerender();
