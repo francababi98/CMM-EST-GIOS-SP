@@ -255,6 +255,10 @@
   .badge-impar{background:var(--laranja-100);color:var(--laranja-600)}
   .cal-ref{font-size:11.5px;color:var(--cinza-700);background:var(--verde-bg);border-radius:10px;padding:11px 13px;margin-top:10px;line-height:1.55}
   .cal-ref b{color:var(--verde)}
+  .cal-meses{margin-top:14px;border-top:1px dashed var(--linha);padding-top:12px}
+  .cal-meses-tit{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--cinza-400);margin-bottom:8px}
+  .cal-mes{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:9px;margin-bottom:5px;font-size:12.5px;color:var(--roxo-900);font-weight:600}
+  .cal-mes.atual{background:var(--roxo-100)}
 
   /* ---------- Toast ---------- */
   .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--roxo-900);color:#fff;font-size:13.5px;font-weight:600;padding:13px 22px;border-radius:12px;box-shadow:var(--sombra-lg);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:60;display:flex;align-items:center;gap:10px}
@@ -370,7 +374,10 @@
       <section class="painel">
         <div class="painel-head">
           <h2>Campos de Estágio</h2>
-          <button class="btn btn-primary" id="btnNovo">＋ Novo Campo</button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-perigo" id="btnApagarTodos">🗑 Apagar todos</button>
+            <button class="btn btn-primary" id="btnNovo">＋ Novo Campo</button>
+          </div>
         </div>
         <p class="dica">Cadastro central de todos os campos: capacidade, regras de utilização, financeiro e documentação.</p>
         <div class="ferramentas">
@@ -1023,6 +1030,19 @@ function salvar(novoDepois){
   if(novoDepois){ abrirForm(null); } else { fecharForm(); }
 }
 
+$("#btnApagarTodos").addEventListener("click",async()=>{
+  const n=CAMPOS.length;
+  if(!confirm(`Apagar TODOS os ${n} campo(s) e as alocações ligadas a eles?\n\nEsta ação não pode ser desfeita.`)) return;
+  if(window.PB && window.PB.ativo){
+    const r=await window.PB.wipeAll();
+    if(!r.ok){ mostrarToast("⚠️ Não foi possível apagar no banco. Tente de novo."); console.warn(r.err); return; }
+  }
+  CAMPOS.length=0; if(window.DB&&DB.alocacoes) DB.alocacoes.length=0;
+  montarCidades(); renderLista();
+  if(window.alocShowList) window.alocShowList();
+  if(window.dashRerender) window.dashRerender();
+  mostrarToast("🗑 Todos os campos e alocações foram apagados.");
+});
 $("#btnNovo").addEventListener("click",()=>abrirForm(null));
 $("#btnVoltar").addEventListener("click",fecharForm);
 $("#tbody").addEventListener("click",e=>{ const tr=e.target.closest("tr[data-id]"); if(!tr) return; abrirForm(CAMPOS.find(c=>c.id===+tr.dataset.id)); });
@@ -1200,6 +1220,8 @@ function renderCal(){
     const hl=is3x2 && w.parity===semSel;
     return `<div class="cal-week" style="${hl?'border-color:var(--laranja-500);background:var(--laranja-100)':''}"><div class="wk">Semana ${w.semana}<small>inicia dia ${String(w.dia).padStart(2,'0')}</small></div><span class="badge-${w.parity}">${w.parity==='par'?'PAR':'ÍMPAR'}</span></div>`;
   }).join("");
+  const mesesRes=MESES.map(m=>{ const w=weeksOf(m.v); return {nome:m.nome, v:m.v, parity:(w.length?w[0].parity:"par")}; });
+  html+=`<div class="cal-meses"><div class="cal-meses-tit">Meses — semana inicial</div>`+mesesRes.map(m=>`<div class="cal-mes ${m.v===mesV?'atual':''}"><span>${m.nome}</span><span class="badge-${m.parity}">${m.parity==='par'?'PAR':'ÍMPAR'}</span></div>`).join("")+`</div>`;
   html+=`<div class="cal-ref">Referência fixa: a semana iniciada em <b>03/08/2026</b> é <b>PAR</b>. As demais semanas — inclusive a virada entre os meses — são calculadas automaticamente.</div>`;
   $("#afCal").innerHTML=html;
 }
@@ -1362,6 +1384,7 @@ if(window.dashRerender) window.dashRerender();
     saveCampo(c){ if(!this.ativo)return; sb.from("campos_bh").upsert(campoOut(c)).then(({error})=>{ if(error) erro("Não foi possível salvar o campo no banco.",error); }); },
     delCampo(id){ if(!this.ativo)return; sb.from("campos_bh").delete().eq("id",id).then(({error})=>{ if(error) erro("Não foi possível excluir o campo no banco.",error); }); },
     saveAloc(a){ if(!this.ativo)return; sb.from("alocacoes_bh").upsert(alocOut(a)).then(({error})=>{ if(error) erro("Não foi possível salvar a alocação no banco.",error); }); },
+    async wipeAll(){ if(!this.ativo) return {ok:true}; const d1=await sb.from("alocacoes_bh").delete().gte("id",0); const d2=await sb.from("campos_bh").delete().gte("id",0); return {ok: !d1.error && !d2.error, err:d1.error||d2.error}; },
   };
 
   async function carregar(){
