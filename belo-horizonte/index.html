@@ -650,9 +650,9 @@
               <div class="seg" id="afSemModelo" style="margin-top:6px"><button type="button" data-v="semana_todos" class="on">Todos os dias (seg–sex)</button><button type="button" data-v="semana_3x2">Modelo 3×2</button></div>
             </div>
             <div class="cond" id="wrapSemana" style="margin-top:16px">
-              <label class="lab">Semana (alternância 3×2)</label><br>
-              <div class="seg laranja" id="afSemana" style="margin-top:6px"><button type="button" data-v="par" class="on">Semana PAR</button><button type="button" data-v="impar">Semana ÍMPAR</button></div>
-              <span class="hint">A alternância entre as semanas é recalculada automaticamente a cada competência.</span>
+              <label class="lab">Mês (alternância)</label><br>
+              <div class="seg laranja" id="afSemana" style="margin-top:6px"><button type="button" data-v="par" class="on">Mês PAR</button><button type="button" data-v="impar">Mês ÍMPAR</button></div>
+              <span class="hint">A unidade ocupa o campo nos meses dessa paridade. Veja no calendário ao lado quais meses são PAR/ÍMPAR.</span>
             </div>
             <div class="cond" id="wrapFds" style="margin-top:16px">
               <label class="lab">Dias (final de semana)</label><br>
@@ -1137,6 +1137,18 @@ function weeksOf(mesV){
   while(d<=last){ out.push({semana:i++,dia:d.getDate(),parity:mondayParity(d)}); d=new Date(d); d.setDate(d.getDate()+7); }
   return out;
 }
+// Paridade POR MÊS: Agosto/2026 = PAR; um mês de 31 dias inverte a sequência do mês seguinte (30/28 dias mantêm).
+function daysInMonth(y,m){ return new Date(y,m,0).getDate(); }
+function mesParity(mesV){
+  const [y,m]=mesV.split("-").map(Number);
+  let cy=2026, cm=8, par=true;
+  if(y>cy || (y===cy && m>cm)){
+    while(cy!==y || cm!==m){ if(daysInMonth(cy,cm)%2===1) par=!par; cm++; if(cm>12){cm=1;cy++;} }
+  } else {
+    while(cy!==y || cm!==m){ cm--; if(cm<1){cm=12;cy--;} if(daysInMonth(cy,cm)%2===1) par=!par; }
+  }
+  return par?"par":"impar";
+}
 function slotKey(a){ if(a.modelo==="semana_todos")return"SEM"; if(a.modelo==="semana_3x2")return a.semana==="par"?"PAR":"IMPAR"; if(a.modelo==="fds_sabdom")return"FDS"; if(a.modelo==="fds_sab")return"SAB"; return"DOM"; }
 function modeloTxt(a){ return a.modelo==="semana_3x2"?`3×2 · ${a.semana==="par"?"PAR":"ÍMPAR"}`:MODELO_LBL[a.modelo]; }
 function statusDe(pct){ if(pct>=100)return{cls:"lot",cor:"r",txt:"🔴 Lotado"}; if(pct>=90)return{cls:"quase",cor:"a",txt:"🟡 Quase lotado"}; return{cls:"disp",cor:"v",txt:"🟢 Disponível"}; }
@@ -1212,17 +1224,11 @@ function segSet(id,v){ $$("#"+id+" button").forEach(b=>b.classList.toggle("on",b
 function segGet(id){ return ($("#"+id+" button.on")||{}).dataset?.v; }
 
 function renderCal(){
-  const mesV=$("#afComp").value; const weeks=weeksOf(mesV);
-  const is3x2 = segGet("afTipo")==="semana" && segGet("afSemModelo")==="semana_3x2";
-  const semSel = segGet("afSemana");
-  let html=`<div class="comp-lbl">${nomeMes(mesV)}</div><div class="nota">Prévia automática · gerada a partir do calendário real.</div>`;
-  html+=weeks.map(w=>{
-    const hl=is3x2 && w.parity===semSel;
-    return `<div class="cal-week" style="${hl?'border-color:var(--laranja-500);background:var(--laranja-100)':''}"><div class="wk">Semana ${w.semana}<small>inicia dia ${String(w.dia).padStart(2,'0')}</small></div><span class="badge-${w.parity}">${w.parity==='par'?'PAR':'ÍMPAR'}</span></div>`;
-  }).join("");
-  const mesesRes=MESES.map(m=>{ const w=weeksOf(m.v); return {nome:m.nome, v:m.v, parity:(w.length?w[0].parity:"par")}; });
-  html+=`<div class="cal-meses"><div class="cal-meses-tit">Meses — semana inicial</div>`+mesesRes.map(m=>`<div class="cal-mes ${m.v===mesV?'atual':''}"><span>${m.nome}</span><span class="badge-${m.parity}">${m.parity==='par'?'PAR':'ÍMPAR'}</span></div>`).join("")+`</div>`;
-  html+=`<div class="cal-ref">Referência fixa: a semana iniciada em <b>03/08/2026</b> é <b>PAR</b>. As demais semanas — inclusive a virada entre os meses — são calculadas automaticamente.</div>`;
+  const mesV=$("#afComp").value;
+  const atual=mesParity(mesV);
+  let html=`<div class="comp-lbl">${nomeMes(mesV)} <span class="badge-${atual}" style="vertical-align:middle;margin-left:6px">${atual==='par'?'PAR':'ÍMPAR'}</span></div><div class="nota">Paridade de cada competência (prévia automática).</div>`;
+  html+=`<div class="cal-meses">`+MESES.map(m=>{ const p=mesParity(m.v); return `<div class="cal-mes ${m.v===mesV?'atual':''}"><span>${m.nome}</span><span class="badge-${p}">${p==='par'?'PAR':'ÍMPAR'}</span></div>`; }).join("")+`</div>`;
+  html+=`<div class="cal-ref"><b>Agosto/2026</b> é <b>PAR</b>. Os meses alternam automaticamente: um mês de <b>31 dias</b> inverte a paridade do mês seguinte (meses de 30/28 dias mantêm) — por isso pode haver dois meses seguidos iguais.</div>`;
   $("#afCal").innerHTML=html;
 }
 function infoCampo(){
